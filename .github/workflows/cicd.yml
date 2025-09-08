@@ -1,0 +1,44 @@
+name: CI/CD
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-cd-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build & Push image (multi-stage Dockerfile)
+        env:
+          IMAGE_LATEST: ghcr.io/${{ github.repository_owner }}/polaris-secuone-dashboard:latest
+          IMAGE_SHA:    ghcr.io/${{ github.repository_owner }}/polaris-secuone-dashboard:sha-${{ github.sha }}
+        run: |
+          docker build -t "$IMAGE_LATEST" -t "$IMAGE_SHA" .
+          docker push "$IMAGE_LATEST"
+          docker push "$IMAGE_SHA"
+
+  deploy:
+    needs: build-and-push
+    runs-on: self-hosted
+    steps:
+      - name: Login GHCR (runner)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Pull & Up on server
+        run: |
+          cd /home/tomcat/secuone
+          docker pull ghcr.io/${{ github.repository_owner }}/polaris-secuone-dashboard:latest
+          docker compose up -d
+          docker image prune -f
