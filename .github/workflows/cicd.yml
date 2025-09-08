@@ -5,17 +5,14 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-# GITHUB_TOKEN 권한 (GHCR 푸시/풀 위해 꼭 필요)
 permissions:
   contents: read
   packages: write
 
-# 모든 run 스텝에서 bash 사용 (환경변수 확장 안정화)
 defaults:
   run:
     shell: bash
 
-# 공통 이미지 리포지토리 변수
 env:
   IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/polaris-secuone-manager
 
@@ -38,9 +35,6 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: self-hosted
-    # (안전) job 단에도 env를 명시해 환경변수 가시화
-    env:
-      IMAGE_REPO: ${{ env.IMAGE_REPO }}
     steps:
       - name: Login GHCR (runner)
         run: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
