@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>광고 • 보안 콘솔</title>
+
+  <!-- 엔드포인트 기본값 (스프링에서 /api/directads 로 라우팅) -->
+  <meta name="directads-endpoint" th:content="@{/api/directads}" content="/api/directads">
+
+  <link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
+  <link rel="stylesheet" th:href="@{/css/directads.css}" href="/css/directads.css">
+</head>
+<body class="ads-page">
+<div class="layout">
+  <!-- ✅ 광고 메뉴 active -->
+  <div th:replace="~{fragments/nav :: sidebar(active=${'directads'}, mode=${'admin'})}"></div>
+
+  <main class="content">
+    <div class="content-inner">
+      <header class="page-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
+        <div>
+          <h1 class="h1">광고</h1>
+          <div class="muted today" id="todayText">-</div>
+        </div>
+        <div class="muted" style="font-size:12px;">API: <span id="apiBaseHint"></span></div>
+      </header>
+
+      <div class="section">
+        <h2 class="h2"><span id="totalBanner">BANNER</span></h2>
+        <section id="gridBanner" class="ads-grid"></section>
+      </div>
+
+      <div class="section">
+        <h2 class="h2"><span id="totalBottom">BOTTOM</span></h2>
+        <section id="gridBottom" class="ads-grid"></section>
+      </div>
+
+      <div class="section">
+        <h2 class="h2"><span id="totalEvent">EVENT</span></h2>
+        <section id="gridEvent" class="ads-grid"></section>
+      </div>
+
+      <!-- 선택: 미분류도 보고 싶으면 -->
+      <div class="section">
+        <h2 class="h2"><span id="totalOthers">기타</span></h2>
+        <section id="gridOthers" class="ads-grid"></section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<button type="button" class="fab" id="fabAdd" aria-label="광고 추가">
+  <span aria-hidden="true">＋</span>
+</button>
+
+<!-- ===== 모달 ===== -->
+<div id="adModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="adModalTitle">
+  <div class="dialog" role="document">
+    <div class="dialog-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div id="adModalTitle" style="font-weight:700;">광고 • 항목</div>
+      <button type="button" class="btn ghost" data-close aria-label="닫기">✕</button>
+    </div>
+
+    <form id="adForm" class="dialog-body">
+      <div id="adMsg" class="muted" style="min-height:18px;margin-bottom:8px;"></div>
+
+      <input type="hidden" id="mId">
+
+      <div class="field">
+        <label for="mAdType">유형 (adType)</label>
+        <select id="mAdType">
+          <option value="BANNER">BANNER</option>
+          <option value="BOTTOM">BOTTOM</option>
+          <option value="EVENT">EVENT</option>
+          <option value="EVENT_FAB">EVENT_FAB</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="mStatus">상태 (status)</label>
+        <select id="mStatus">
+          <option value="ACTIVE">ACTIVE</option>
+          <option value="INACTIVE">INACTIVE</option>
+          <option value="DRAFT">DRAFT</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="mAdvertiserName">광고주명 (advertiserName)</label>
+        <input id="mAdvertiserName" type="text" placeholder="예: POLARIS OFFICE">
+      </div>
+
+      <div class="field">
+        <label for="mImageUrl">이미지 URL (imageUrl)</label>
+        <input id="mImageUrl" type="url" placeholder="https://...">
+      </div>
+
+      <div class="field">
+        <label for="mTargetUrl">랜딩 URL (targetUrl)</label>
+        <input id="mTargetUrl" type="url" placeholder="https://...">
+      </div>
+
+      <div class="field">
+        <label for="mBackgroundColor">배경색 (backgroundColor)</label>
+        <input id="mBackgroundColor" type="text" placeholder="#FFFFFF" value="#FFFFFF">
+        <!-- 원하면 color picker 사용:
+        <input id="mBackgroundColor" type="color" value="#ffffff">
+        -->
+      </div>
+
+      <div class="field">
+        <label for="mLocales">노출 언어 (locales, 콤마로 구분)</label>
+        <input id="mLocales" type="text" placeholder="en, ko, ja">
+      </div>
+
+      <div class="field" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <div>
+          <label for="mMinAppVersion">최소 앱버전 (minAppVersion)</label>
+          <input id="mMinAppVersion" type="text" placeholder="예: 1.0.0">
+        </div>
+        <div>
+          <label for="mMaxAppVersion">최대 앱버전 (maxAppVersion)</label>
+          <input id="mMaxAppVersion" type="text" placeholder="예: 9.9.9">
+        </div>
+      </div>
+
+      <div class="field" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <div>
+          <label for="mPublishedAt">게시일 (publishedAt)</label>
+          <input id="mPublishedAt" type="datetime-local">
+        </div>
+        <div>
+          <label for="mStartAt">시작일 (startAt)</label>
+          <input id="mStartAt" type="datetime-local">
+        </div>
+        <div>
+          <label for="mEndAt">종료일 (endAt)</label>
+          <input id="mEndAt" type="datetime-local">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="btnDelete" class="btn danger" style="margin-right:auto;">삭제</button>
+        <button type="button" class="btn" data-close>취소</button>
+        <button type="submit" class="btn primary">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script th:src="@{/js/directads.js}" src="/js/directads.js"></script>
+<script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
+</body>
+</html>

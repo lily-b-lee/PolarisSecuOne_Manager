@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>공지사항 • 보안 콘솔</title>
+
+  <!-- 공통 네비/레이아웃 -->
+  <link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
+  <!-- 페이지 전용 -->
+  <link rel="stylesheet" th:href="@{/css/notice.css}" href="/css/notice.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- 활성 메뉴 = notice -->
+    <div th:replace="~{fragments/nav :: sidebar(active=${'notice'}, mode=${'admin'})}"></div>
+
+    <main class="content">
+      <!-- 헤더 -->
+      <header class="page-head">
+        <div>
+          <h1 class="h1">공지사항</h1>
+          <div class="muted" id="todayText">-</div>
+        </div>
+        <div class="muted">총 <span id="totalCount">0</span>개</div>
+      </header>
+
+      <!-- 표 -->
+      <section class="table-wrap">
+        <table class="table" id="noticeTable" aria-describedby="todayText">
+          <thead>
+            <tr>
+              <th scope="col">제목</th>
+              <th scope="col">내용</th>
+              <th scope="col">작성자</th>
+              <th scope="col">카테고리</th>
+              <th scope="col">날짜</th>
+              <th scope="col" class="th-actions" aria-label="행 메뉴"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"><!-- JS 렌더링 --></tbody>
+        </table>
+        <div id="empty" class="empty" hidden>데이터가 없습니다.</div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 플로팅 버튼 -->
+  <button type="button" class="fab" id="fabAdd" aria-label="공지 추가">＋</button>
+
+  <!-- 행 액션 메뉴 -->
+  <div id="rowMenu" class="row-menu" hidden>
+    <button type="button" data-action="edit">수정</button>
+    <button type="button" data-action="delete" class="danger">삭제</button>
+  </div>
+
+  <!-- 추가/수정 모달 -->
+  <div id="noticeModal" class="modal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <header class="dialog-head">
+        <div class="head-left">
+          <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="4" fill="#2563eb" opacity=".12"/>
+            <path d="M7 12h10M12 7v10" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <div id="modalTitle" class="title">공지사항</div>
+            <div id="modalSub" class="subtitle">새 항목 추가</div>
+          </div>
+        </div>
+        <button type="button" class="close" data-close aria-label="닫기">×</button>
+      </header>
+
+      <form id="noticeForm" class="dialog-body">
+        <input type="hidden" id="mId">
+
+        <div class="field">
+          <label for="mTitle">제목</label>
+          <input id="mTitle" name="mTitle" type="text" placeholder="제목을 입력하세요" required>
+        </div>
+
+        <div class="field">
+          <label for="mContent">내용</label>
+          <textarea id="mContent" name="mContent" rows="4" placeholder="내용을 입력하세요"></textarea>
+        </div>
+
+        <div class="field-3col">
+          <div class="field">
+            <label for="mAuthor">작성자</label>
+            <input id="mAuthor" name="mAuthor" type="text" placeholder="예: 관리자">
+          </div>
+
+          <div class="field">
+            <label for="mCategory">카테고리</label>
+            <select id="mCategory" name="mCategory">
+              <option value="EVENT">이벤트</option>
+              <option value="EMERGENCY">긴급보안공지</option>
+              <option value="SERVICE_GUIDE">서비스 안내</option>
+              <option value="UPDATE">업데이트</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="mDate">날짜</label>
+            <input id="mDate" name="mDate" type="date">
+          </div>
+        </div>
+		<div class="field" style="display:flex; gap:16px; align-items:center;">
+		  <label style="display:flex; gap:6px; align-items:center;">
+		    <input type="checkbox" id="mSendPush">
+		    <span>저장 후 푸시 발송</span>
+		  </label>
+		  <label style="display:flex; gap:6px; align-items:center; opacity:.9">
+		    <input type="checkbox" id="mPushTest">
+		    <span>테스트 모드(테스트 채널/대상)</span>
+		  </label>
+		</div>
+        <div class="actions">
+          <button type="button" id="btnDelete" class="btn ghost danger" style="margin-right:auto;display:none">삭제</button>
+          <button type="button" class="btn ghost" data-close>취소</button>
+          <button type="submit" class="btn primary" id="btnSave">발행하기</button>
+        </div>
+
+        <div id="modalMsg" class="hint" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script th:src="@{/js/notice.js}" src="/js/notice.js"></script>
+<script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
+
+</body>
+</html>

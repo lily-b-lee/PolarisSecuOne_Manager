@@ -1,0 +1,30 @@
+/* 폴라레터 전용 오버라이드: 썸네일 3:1 */
+.news-card .thumb-wrap{
+  aspect-ratio: 3 / 1;     /* 근래 브라우저 */
+  height: 160px;           /* fallback 높이 (임의) */
+  background: #f3f4f6;
+  position: relative;
+  overflow: hidden;
+}
+.news-card .thumb-wrap img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* aspect-ratio 미지원 브라우저 폴백 */
+@supports not (aspect-ratio: 3 / 1){
+  .news-card .thumb-wrap::before{
+    content: "";
+    display: block;
+    padding-top: 33.333% !important; /* 3:1 → 세로 = 가로의 1/3 */
+  }
+  .news-card .thumb-wrap img{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}

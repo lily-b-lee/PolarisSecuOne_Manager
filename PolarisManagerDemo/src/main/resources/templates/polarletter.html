@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>폴라레터 • 보안 콘솔</title>
+
+  <!-- 공통 -->
+  <link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
+  <!-- 시큐뉴스와 동일 스타일 그대로 재사용 -->
+  <link rel="stylesheet" th:href="@{/css/newsletter.css}" href="/css/newsletter.css">
+  <!-- 필요하면 아래 주석 해제하고 별도 CSS 사용-->
+  <link rel="stylesheet" th:href="@{/css/polarletter.css}" href="/css/polarletter.css">
+  
+</head>
+<body>
+  <div class="layout">
+    <!-- 사이드바: 활성 메뉴 = polarletter -->
+    <div th:replace="~{fragments/nav :: sidebar(active=${'polarletter'}, mode=${'admin'})}"></div>
+
+    <main class="content">
+      <!-- 상단 헤더 -->
+      <header class="page-head">
+        <div>
+          <h1 class="h1">폴라레터</h1>
+          <div class="muted today" id="todayText">-</div>
+        </div>
+        <div class="muted total"><span id="totalCount">총 0개</span></div>
+      </header>
+
+      <!-- 카드 그리드 (4열, 1:1 썸네일) -->
+      <section id="grid" class="news-grid" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <!-- 플로팅 추가 버튼 -->
+  <button type="button" class="fab" id="fabAdd" aria-label="레터 추가">
+    <span aria-hidden="true">＋</span>
+  </button>
+
+  <!-- 추가/수정 모달 -->
+  <div id="plModal" class="modal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="plModalTitle">
+      <header class="dialog-head">
+        <div class="head-left" style="display:flex;align-items:center;gap:12px">
+          <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="4" fill="#2563eb" opacity=".1"/>
+            <path d="M7 12h10M12 7v10" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <div id="plModalTitle" class="title">폴라레터</div>
+            <div class="subtitle" id="plModalSub">새 항목 추가</div>
+          </div>
+        </div>
+        <button type="button" class="close" data-close aria-label="닫기">×</button>
+      </header>
+
+      <form id="plForm" class="dialog-body">
+        <input type="hidden" id="mId">
+
+        <div class="field">
+          <label for="mAuthor">작성자</label>
+          <input id="mAuthor" name="mAuthor" type="text" placeholder="예: 관리자">
+        </div>
+
+        <div class="field">
+          <label for="mDate">작성일</label>
+          <input id="mDate" name="mDate" type="date">
+        </div>
+
+        <div class="field">
+          <label for="mTitle">제목</label>
+          <input id="mTitle" name="mTitle" type="text" placeholder="제목을 입력하세요" required>
+        </div>
+
+        <div class="field">
+          <label for="mContent">내용</label>
+          <input id="mContent" name="mContent" type="text" placeholder="간단한 본문(선택)">
+        </div>
+
+        <div class="field">
+          <label for="mUrl">원문 URL</label>
+          <input id="mUrl" name="mUrl" type="url" placeholder="https://...">
+        </div>
+
+        <div class="field">
+          <label for="mThumb">썸네일 URL</label>
+          <input id="mThumb" name="mThumb" type="url" placeholder="https://...">
+        </div>
+
+        <div class="actions">
+          <button type="button" id="btnDelete" class="btn ghost" style="margin-right:auto;display:none">삭제</button>
+          <button type="button" class="btn ghost" data-close>취소</button>
+          <button type="submit" class="btn primary" id="btnSave">저장하기</button>
+        </div>
+
+        <div id="plMsg" class="hint" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script th:src="@{/js/polarletter.js}" src="/js/polarletter.js"></script>
+<script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
+
+</body>
+</html>

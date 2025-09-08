@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+  <!-- mode: 'admin' | 'portal' -->
+  <aside class="sidebar" role="navigation" aria-label="Main sidebar"
+         th:fragment="sidebar(active, mode)"
+         th:attr="data-mode=${mode}">
+    <div class="brand">
+      <img th:src="@{/images/brand_logo.png}" src="/images/brand_logo.png" alt="Brand logo" width="160">
+    </div>
+
+    <div th:switch="${mode}">
+      <!-- 포털(고객사) -->
+      <div th:case="'portal'">
+        <div class="section-label">PORTAL</div>
+        <ul class="nav-menu">
+          <li>
+            <a class="nav-item" th:classappend="${active}=='overview' ? ' is-active' : ''"
+               th:href="@{/manager/overview}" href="/manager/overview">
+              <span class="nav-ico">📊</span><span class="nav-text">Overview</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-item" th:classappend="${active}=='reports' ? ' is-active' : ''"
+               th:href="@{/manager/reports}" href="/manager/reports">
+              <span class="nav-ico">📄</span><span class="nav-text">보고서</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-item" th:classappend="${active}=='settlement' ? ' is-active' : ''"
+               th:href="@{/manager/settlement}" href="/manager/settlement">
+              <span class="nav-ico">💼</span><span class="nav-text">정산</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 관리자 -->
+      <div th:case="*">
+        <div class="section-label">GENERIC</div>
+        <nav class="menu">
+          <a class="menu-item" th:classappend="${active}=='overview' ? ' active' : ''"
+             th:href="@{/overview}" href="/overview">
+            <span class="icon">🏠</span><span class="label">Overview</span>
+          </a>
+          <a class="menu-item" th:classappend="${active}=='newsletter' ? ' active' : ''"
+             th:href="@{/newsletter}" href="/newsletter">
+            <span class="icon">📰</span><span class="label">시큐뉴스</span>
+          </a>
+          <a class="menu-item" th:classappend="${active}=='polarletter' ? ' active' : ''"
+             th:href="@{/polarletter}" href="/polarletter">
+            <span class="icon">📧</span><span class="label">폴라레터</span>
+          </a>
+          <a class="menu-item" th:classappend="${active}=='notice' ? ' active' : ''"
+             th:href="@{/notice}" href="/notice">
+            <span class="icon">📢</span><span class="label">공지사항</span>
+          </a>
+          <a class="menu-item" th:classappend="${active}=='customers' ? ' active' : ''"
+             th:href="@{/customers}" href="/customers">
+            <span class="icon">👥</span><span class="label">고객사</span>
+          </a>
+          <!-- 광고 메뉴 추가 -->
+          <a class="menu-item" th:classappend="${active}=='directads' ? ' active' : ''"
+             th:href="@{/directads}" href="/directads">
+            <span class="icon">🪧</span><span class="label">직광고</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- 하단 유저 박스 + 설정/로그아웃 버튼 -->
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <span id="navUser" class="uid">-</span>
+        <span id="navRole" class="role">-</span>
+        <div class="footer-actions">
+          <button id="btnSettings" class="icon-btn" aria-label="설정" title="설정">
+            <!-- gear -->
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z
+                       M19.4 12a7.4 7.4 0 0 0 .06-.94l1.7-1.33-1-1.73-2.07.42a7.7 7.7 0 0 0-.67-.67l.42-2.07-1.73-1-1.33 1.7c-.31-.02-.63-.04-.95-.04s-.64.01-.95.04L9.5 2.64l-1.73 1 .42 2.07c-.23.21-.45.43-.66.67l-2.07-.42-1 1.73 1.7 1.33c-.02.31-.04.63-.04.95s.01.64.04.95l-1.7 1.33 1 1.73 2.07-.42c.21.24.43.46.66.67l-.42 2.07 1.73 1 1.33-1.7c.31.02.63.04.95.04s.64-.01.95-.04l1.33 1.7 1.73-1-.42-2.07c.24-.21.46-.43.67-.66l2.07.42 1-1.73-1.7-1.33c.02-.31.04-.63.04-.95Z"
+                    fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button id="btnLogout" class="icon-btn" aria-label="로그아웃" title="로그아웃">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M10 17l5-5-5-5M15 12H3m8 9a9 9 0 100-18"
+                    fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="navEmail" class="email muted" style="display:none"></div>
+    </div>
+
+    <script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
+  </aside>
+</body>
+</html>

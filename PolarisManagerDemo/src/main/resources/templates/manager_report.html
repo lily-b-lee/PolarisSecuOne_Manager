@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="app-base" th:content="@{/}">
+  <meta name="customer-code" th:content="${customerCode}" content="mg"><!-- fallback 'mg' -->
+  <title>실시간 보고서 • Secuone</title>
+
+  <!-- 공통 사이드바/타이포 -->
+  <link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
+  <!-- 페이지 전용 CSS -->
+  <link rel="stylesheet" th:href="@{/css/manager_report.css}" href="/css/manager_report.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+  <!-- 페이지 전용 JS -->
+  <script th:src="@{/js/manager_report.js}" src="/js/manager_report.js" defer></script>
+  <script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
+</head>
+<body>
+<div class="layout">
+  <!-- ⭐ 포털 모드 사이드바 (reports 활성) -->
+  <div th:replace="~{fragments/nav :: sidebar(active=${'reports'}, mode=${'portal'})}"></div>
+
+  <main class="content">
+    <!-- 헤더 -->
+    <header class="page-head">
+      <div>
+        <h1 class="h1">실시간 보고서</h1>
+        <div class="muted" id="today">-</div>
+      </div>
+
+      <!-- 기간 필터 -->
+      <div class="center toolbar" id="evToolbar">
+        <div class="pill">
+          <label class="muted">기간</label>
+          <input type="date" id="from">
+          <span>~</span>
+          <input type="date" id="to">
+        </div>
+        <select id="quick" aria-label="빠른 기간 선택">
+          <option value="7">최근 7일</option>
+          <option value="14">최근 14일</option>
+          <option value="30" selected>최근 30일</option>
+          <option value="90">최근 90일</option>
+        </select>
+        <button class="btn primary" id="btnLoad">조회</button>
+      </div>
+    </header>
+
+    <!-- 상단 KPI -->
+    <section class="cards" aria-label="요약 KPI">
+      <div class="card"><div class="k">이번달 신규 유입 유저 수</div><div class="v" id="kNewMonthly">-</div></div>
+      <div class="card"><div class="k">이번달 이탈 유저 수</div><div class="v" id="kChurnMonthly">-</div></div>
+      <div class="card"><div class="k">오늘 신규 유입 유저 수</div><div class="v" id="kNewToday">-</div></div>
+      <div class="card"><div class="k">오늘 이탈 유저 수</div><div class="v" id="kChurnToday">-</div></div>
+      <div class="card"><div class="k">이번달 정산 현황</div><div class="v" id="kSettleMonthly">-</div></div>
+    </section>
+
+    <!-- 보안 이벤트 요약 -->
+    <section class="mini-cards" aria-label="보안 이벤트 요약">
+      <div class="card mini">
+        <div class="row">
+          <div class="ico">🦠</div>
+          <div>
+            <div class="muted">악성앱 발견 횟수</div>
+            <div class="val" id="kMalware">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="card mini">
+        <div class="row">
+          <div class="ico">🔓</div>
+          <div>
+            <div class="muted">루팅 발견 횟수</div>
+            <div class="val" id="kRooting">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="card mini">
+        <div class="row">
+          <div class="ico">🖥️</div>
+          <div>
+            <div class="muted">원격제어 앱 발견 횟수</div>
+            <div class="val" id="kRemote">-</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 일별 추이 + 상위 악성유형 -->
+    <section class="grid" id="daily">
+      <div class="card">
+        <div class="card-head">
+          <strong>일별 보안 이벤트 추이</strong>
+          <span class="muted" id="rangeTxt">-</span>
+        </div>
+        <div class="card-body">
+          <canvas id="dailyChart" height="180" aria-label="일별 보안 이벤트 차트"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <strong>주요 악성 유형</strong>
+          <span class="muted" id="topInfo">-</span>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table id="topTable" class="table">
+              <colgroup>
+                <col style="width:56px">
+                <col>
+                <col>
+                <col style="width:90px">
+              </colgroup>
+              <thead>
+              <tr>
+                <th scope="col">순위</th>
+                <th scope="col">악성 유형</th>
+                <th scope="col">패키지명</th>
+                <th scope="col" class="num">횟수</th>
+              </tr>
+              </thead>
+              <tbody><!-- JS가 채움 --></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

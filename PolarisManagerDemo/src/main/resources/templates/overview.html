@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Overview • 보안 콘솔</title>
+
+<!-- 공통 CSS -->
+<link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
+
+<!-- 페이지 전용 CSS -->
+<link rel="stylesheet" th:href="@{/css/overview.css}" href="/css/overview.css">
+</head>
+<body>
+	<div class="layout">
+		<!-- 사이드바 (활성 탭=overview) -->
+		 <div th:replace="~{fragments/nav :: sidebar(active=${'overview'}, mode=${'admin'})}"></div>
+		<main class="content">
+			<!-- 상단 -->
+			<div class="page-head">
+				<div class="title-wrap">
+					<h1>Overview</h1>
+					<div class="muted" id="todayText">-</div>
+				</div>
+
+				<div class="daterange">
+					<input type="date" id="fromDate" aria-label="시작일"> <span>–</span>
+					<input type="date" id="toDate" aria-label="종료일">
+				</div>
+			</div>
+
+			<!-- 핵심 지표 -->
+			<section class="metric-row">
+				<div class="metric">
+					<div class="icon" aria-hidden="true">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+							<path
+								d="M12 3v10m0 0l4-4m-4 4L8 9M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+								stroke="#2563eb" stroke-width="2" stroke-linecap="round"
+								stroke-linejoin="round" /></svg>
+					</div>
+					<div>
+						<div class="name">Total Download Users</div>
+						<div class="value" id="metricUsers">232</div>
+					</div>
+				</div>
+
+				<div class="metric">
+					<div class="icon" aria-hidden="true">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+							<path d="M3 12h18M12 21V3" stroke="#2563eb" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round" /></svg>
+					</div>
+					<div>
+						<div class="name">Shared Revenue</div>
+						<div class="value" id="metricRevenue">$ 23.34</div>
+					</div>
+				</div>
+
+				<div class="metric">
+					<div class="icon" aria-hidden="true">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+							<path
+								d="M3 21h18M6 21V7a2 2 0 012-2h8a2 2 0 012 2v14M9 7h.01M9 11h.01M9 15h.01M15 7h.01M15 11h.01M15 15h.01"
+								stroke="#2563eb" stroke-width="2" stroke-linecap="round"
+								stroke-linejoin="round" /></svg>
+					</div>
+					<div>
+						<div class="name">Connect Customers</div>
+						<div class="value" id="metricCust">7</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- 차트 2개 -->
+			<section class="grid-2">
+				<div class="card">
+					<div class="card-body">
+						<div class="name" style="margin-bottom: 6px">고객사 별 신규 유입 수</div>
+						<div class="panel chart-card">
+							<canvas id="chartNewUsers"></canvas>
+						</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<div class="card-body">
+						<div class="name" style="margin-bottom: 6px">고객사 별 이탈유저 수</div>
+						<div class="panel chart-card">
+							<canvas id="chartChurn"></canvas>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- 퀵 액션 -->
+			<section class="card quick-card" style="margin-top: 14px">
+				<div class="card-body">
+					<div class="name" style="font-weight: 600">Quick Action</div>
+					<div class="quick-actions">
+						<button type="button" class="chip-btn" id="qaAddCustomer">
+							<span>➕</span><span>새 고객사 추가</span>
+						</button>
+						<button type="button" class="chip-btn" id="qaPush">
+							<span>📣</span><span>푸시 보내기</span>
+						</button>
+						<button type="button" class="chip-btn" id="qaUtm">
+							<span>🔗</span><span>UTM 링크 생성</span>
+						</button>
+					</div>
+				</div>
+			</section>
+
+			<!-- 공지/해야할일 -->
+			<section class="grid-2-vertical">
+				<div class="card">
+					<div class="card-body">
+						<div style="font-weight: 600; margin-bottom: 6px">공지사항</div>
+						<ul class="list" id="noticeList">
+							<!-- JS에서 채움 -->
+						</ul>
+					</div>
+				</div>
+
+				<div class="card">
+					<div class="card-body">
+						<div style="font-weight: 600; margin-bottom: 6px">해야 할 일</div>
+						<ul class="list" id="todoList">
+							<li><span><span class="badge"
+									style="background: #111">DO NOT</span> 세금계산서 발행</span><span
+								class="muted">이번 주</span></li>
+						</ul>
+					</div>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<!-- 고객사 등록 모달 (Overview 전용) -->
+	<div class="modal-backdrop" id="custModalOv" aria-hidden="true"
+		role="dialog" aria-modal="true">
+		<div class="modal">
+			<header>
+				<h3 id="ovModalTitle">고객사 등록</h3>
+				<button class="btn ghost" id="ovBtnClose" aria-label="닫기">✖</button>
+			</header>
+			<div class="content">
+				<div class="form-grid">
+					<label for="ovCode">회사 코드</label> <input id="ovCode"
+						placeholder="예: mg (소문자/숫자/-_)" autocomplete="off"> <label
+						for="ovName">회사명</label> <input id="ovName"
+						placeholder="예: MG 주식회사"> <label for="ovContactName">담당자</label>
+					<input id="ovContactName" placeholder="이름"> <label
+						for="ovContactEmail">이메일</label> <input id="ovContactEmail"
+						type="email" placeholder="name@example.com"> <label
+						for="ovContactPhone">연락처</label> <input id="ovContactPhone"
+						placeholder="010-1234-5678"> <label for="ovCpiRate">CPI
+						%</label> <input id="ovCpiRate" type="number" step="0.01" min="0"
+						max="100" value="0"> <label for="ovRsRate">RS %</label> <input
+						id="ovRsRate" type="number" step="0.01" min="0" max="100"
+						value="0"> <label for="ovNote">비고</label>
+					<textarea id="ovNote" rows="3" placeholder="메모/특이사항"></textarea>
+				</div>
+				<div id="ovFormErr" class="error"></div>
+			</div>
+			<footer>
+				<div style="display: flex; gap: 8px; margin-left: auto">
+					<button class="btn" id="ovBtnReset">초기화</button>
+					<button class="btn primary" id="ovBtnSave">저장</button>
+				</div>
+			</footer>
+		</div>
+	</div>
+
+	<!-- UTM 링크 생성 모달 (Overview 전용) -->
+	<div class="modal-backdrop" id="utmModal" aria-hidden="true"
+		role="dialog" aria-modal="true">
+		<div class="modal">
+			<header>
+				<h3>UTM 링크 생성</h3>
+				<button class="btn ghost" id="utmBtnClose" aria-label="닫기">✖</button>
+			</header>
+
+			<div class="content">
+				<div class="form-grid">
+					<label for="utmBase">기본 URL</label> 
+					<input id="utmBase" type="url" placeholder="https://example.com/landing"> 
+					<label for="utmSource">회사명 코드(소문자)</label>
+					<input id="utmSource" placeholder="mg"> 
+					<label for="utmMedium">연동방식</label>
+					<input id="utmMedium" placeholder="ata/wta">
+					<label for="utmCampaign">연동기능</label>
+					<input id="utmCampaign" placeholder="vaccine..">
+
+				</div>
+
+				<div id="utmErr" class="error" style="margin-top: 8px"></div>
+
+				<div class="card" style="margin-top: 12px">
+					<div class="card-body">
+						<div class="muted" style="margin-bottom: 6px">미리보기</div>
+						<div id="utmPreview" style="word-break: break-all">-</div>
+					</div>
+				</div>
+			</div>
+
+			<footer>
+				<div style="display: flex; gap: 8px; margin-left: auto">
+					<button class="btn" id="utmReset">초기화</button>
+					<button class="btn" id="utmCopy">복사</button>
+					<button class="btn primary" id="utmOpen">새 탭에서 열기</button>
+				</div>
+			</footer>
+		</div>
+	</div>
+
+
+	<!-- 공통 JS -->
+	<script th:src="@{/js/nav.js}" src="/js/nav.js"></script>
+	<!-- Chart.js -->
+	<script
+		src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+	<!-- 페이지 스크립트 -->
+	<script th:src="@{/js/overview.js}" src="/js/overview.js"></script>
+
+	<!-- Overview 전용: 새 고객사 추가 모달 로직 -->
+	<script>
+    (function(){
+      const $ = s => document.querySelector(s);
+      const API = '/api/admin/customers';
+
+      const showErr = (m) => { const el = $('#ovFormErr'); if(el) el.textContent = m || ''; };
+      const resetForm = () => {
+        $('#ovCode').value=''; $('#ovName').value=''; $('#ovContactName').value='';
+        $('#ovContactEmail').value=''; $('#ovContactPhone').value='';
+        $('#ovCpiRate').value='0'; $('#ovRsRate').value='0'; $('#ovNote').value='';
+        showErr('');
+      };
+      const openModal = () => {
+        const m = $('#custModalOv'); m.classList.add('show'); m.setAttribute('aria-hidden','false');
+        document.body.style.overflow='hidden';
+        setTimeout(()=>$('#ovCode')?.focus(),0);
+      };
+      const closeModal = () => {
+        const m = $('#custModalOv'); m.classList.remove('show'); m.setAttribute('aria-hidden','true');
+        document.body.style.overflow=''; showErr('');
+      };
+
+      const getToken = () => localStorage.getItem('admin_token') || null;
+      const authHeaders = () => {
+        const h = { 'Content-Type':'application/json' };
+        const t = getToken(); if (t) h['Authorization'] = `Bearer ${t}`;
+        return h;
+      };
+
+      async function create(payload){
+        const res = await fetch(API, {
+          method:'POST', headers:authHeaders(), body:JSON.stringify(payload), credentials:'same-origin'
+        });
+        const data = await res.json().catch(()=> ({}));
+        if(!res.ok) throw new Error(data?.message || `생성 실패(HTTP ${res.status})`);
+        return data;
+      }
+
+      async function onSave(){
+        showErr('');
+        const payload = {
+          code: ($('#ovCode').value || '').trim(),
+          name: ($('#ovName').value || '').trim(),
+          contactName: ($('#ovContactName').value || '').trim(),
+          contactEmail: ($('#ovContactEmail').value || '').trim(),
+          contactPhone: ($('#ovContactPhone').value || '').trim(),
+          cpiRate: $('#ovCpiRate').value ? Number($('#ovCpiRate').value) : null,
+          rsRate:  $('#ovRsRate').value  ? Number($('#ovRsRate').value)  : null,
+          note: ($('#ovNote').value || '').trim(),
+        };
+        if(!payload.code) return showErr('회사 코드를 입력하세요.');
+        if(!payload.name) return showErr('회사명을 입력하세요.');
+        try {
+          await create(payload);
+          closeModal();
+          resetForm();
+          alert('고객사가 등록되었습니다.');
+          // 필요 시: location.href = '/customers';
+        } catch (e) {
+          showErr(e.message || '저장 실패');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        $('#qaAddCustomer')?.addEventListener('click', () => { resetForm(); openModal(); });
+        $('#ovBtnClose')?.addEventListener('click', closeModal);
+        $('#ovBtnReset')?.addEventListener('click', resetForm);
+        $('#ovBtnSave')?.addEventListener('click', onSave);
+
+        // 배경 클릭/ESC 닫기
+        document.addEventListener('click', (e)=>{
+          const m = $('#custModalOv');
+          if(!m || !m.classList.contains('show')) return;
+          if(e.target === m) closeModal();
+        });
+        document.addEventListener('keydown', (e)=>{
+          if(e.key==='Escape') closeModal();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

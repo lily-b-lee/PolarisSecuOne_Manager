@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="app-base" th:content="@{/}">
+  <title>설정 • Secuone</title>
+
+  <link rel="stylesheet" th:href="@{/css/nav.css}">
+  <link rel="stylesheet" th:href="@{/css/manager_setting.css}">
+</head>
+<body>
+<div class="layout">
+  <!-- 좌측 사이드바(포털 모드) -->
+  <div th:replace="~{fragments/nav :: sidebar(active=${'settings'}, mode=${'portal'})}"></div>
+
+  <!-- 메인 -->
+  <main class="content settings-main">
+    <header class="settings-head">
+      <h1>회원 정보</h1>
+      <div class="sub" th:text="${weekday} + ' ' + ${todayStr}">금요일 2025-08-29</div>
+    </header>
+
+    <!-- 카드 -->
+    <section class="settings-card" role="form" aria-labelledby="formTitle">
+      <h2 id="formTitle" class="sr-only">회원 정보 입력</h2>
+
+      <div class="setting-form" id="profileForm">
+        <!-- 이름 -->
+        <div class="s-row">
+          <label for="name">이름</label>
+          <input id="name" name="name" type="text" autocomplete="name" placeholder="이름" readonly aria-readonly="true">
+        </div>
+
+        <!-- 휴대전화 번호 -->
+        <div class="s-row">
+          <label for="phone">휴대전화 번호</label>
+          <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="010-1234-1234" autocomplete="tel" readonly aria-readonly="true">
+        </div>
+
+        <!-- 이메일 (읽기 전용) -->
+        <div class="s-row">
+          <label for="email">이메일</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" readonly aria-readonly="true">
+        </div>
+
+        <!-- 고객사 코드 (읽기 전용) -->
+        <div class="s-row">
+          <label for="code">고객사 코드</label>
+          <input id="code" name="code" type="text" readonly aria-readonly="true">
+        </div>
+
+        <!-- 고객사 명 (읽기 전용) -->
+        <div class="s-row">
+          <label for="company">고객사 명</label>
+          <input id="company" name="company" type="text" readonly aria-readonly="true">
+        </div>
+
+        <!-- 비밀번호(더미 표시) -->
+        <div class="s-row">
+          <label for="password">비밀번호</label>
+          <input id="password" type="password" value="••••••••••" disabled aria-disabled="true">
+        </div>
+      </div>
+
+      <!-- 버튼 줄 -->
+      <div class="actions">
+        <!-- 보기 모드 -->
+        <button id="btnEdit" class="btn primary" type="button">수정</button>
+
+        <!-- 편집 모드 -->
+        <button id="btnSave" class="btn primary" type="button" style="display:none">저장</button>
+        <button id="btnCancel" class="btn" type="button" style="display:none">취소</button>
+
+        <!-- 비밀번호 변경 모달 열기 -->
+        <button id="btnPwOpen" class="btn ghost" type="button">비밀번호 변경</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ===================== 비밀번호 변경 모달 ===================== -->
+<div id="pwModal" class="modal" hidden aria-hidden="true" role="dialog" aria-labelledby="pwTitle" aria-modal="true">
+  <div class="modal-backdrop" data-close="1"></div>
+  <div class="modal-dialog">
+    <div class="modal-head">
+      <h2 id="pwTitle">비밀번호 변경</h2>
+    </div>
+    <div class="modal-body">
+      <div class="stack">
+        <label>
+          <div>현재 비밀번호</div>
+          <input id="curPw" type="password" autocomplete="current-password" placeholder="현재 비밀번호">
+        </label>
+
+        <label>
+          <div>새 비밀번호</div>
+          <input id="newPw" type="password" autocomplete="new-password" placeholder="8자 이상 (공백 없음)">
+        </label>
+
+        <label>
+          <div>새 비밀번호 확인</div>
+          <input id="newPw2" type="password" autocomplete="new-password" placeholder="새 비밀번호 재입력">
+        </label>
+      </div>
+      <div id="pwErr" class="err" role="alert" aria-live="polite"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="pwCancel" type="button" class="btn">취소</button>
+      <button id="pwSubmit" type="button" class="btn primary">변경</button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================ -->
+
+<!-- 토스트 (알림) -->
+<div id="toast" class="toast" style="display:none"></div>
+
+<script th:src="@{/js/manager_setting.js}" src="/js/manager_setting.js"></script>
+</body>
+</html>

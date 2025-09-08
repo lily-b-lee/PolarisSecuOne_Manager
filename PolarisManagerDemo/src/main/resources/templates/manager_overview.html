@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="app-base" th:content="@{/}">
+  <title>Overview • Secuone</title>
+<!-- 공통 CSS -->
+<link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
+<link rel="stylesheet" th:href="@{/css/manager_overview.css?v=20250904}" href="/css/manager_overview.css?v=20250904">
+
+</head>
+<body>
+  <div class="layout">
+    <!-- 관리자 메뉴 -->
+<div th:replace="~{fragments/nav :: sidebar(active=${'overview'}, mode=${'portal'})}"></div>
+
+
+
+    <main class="content ov-main">
+      <header class="ov-head">
+        <div>
+          <h1>Overview</h1>
+          <div class="ov-date" th:text="${weekday} + ' ' + todayStr">월요일 2025-08-25</div>
+        </div>
+
+        <div class="ov-range">
+          <input type="date" id="startDate">
+          <span class="dash">–</span>
+          <input type="date" id="endDate">
+          <button class="btn sm" id="applyRange">적용</button>
+        </div>
+      </header>
+
+      <section class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-ico">🕒</div>
+          <div class="kpi-meta">
+            <div class="kpi-label">유입 유저 수</div>
+            <div class="kpi-val" id="kpiInflow" data-value="232">232</div>
+          </div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-ico">🏢</div>
+          <div class="kpi-meta">
+            <div class="kpi-label">이탈 유저 수</div>
+            <div class="kpi-val" id="kpiChurn" data-value="7">7</div>
+          </div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-ico">📈</div>
+          <div class="kpi-meta">
+            <div class="kpi-label">Shared Revenue</div>
+            <div class="kpi-val" id="kpiRev" data-value="23.34">$ 23.34</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="charts">
+        <div class="card">
+          <div class="card-title">월별 신규 유입 수</div>
+          <canvas id="chartInflow" height="220"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">월별 이탈 유저 수</div>
+          <canvas id="chartChurn" height="220"></canvas>
+        </div>
+      </section>
+
+      <section class="board card">
+        <div class="board-title">공지사항</div>
+        <ul class="board-list">
+          <li class="board-item">
+            <span class="badge">EVENT</span>
+            <span class="board-text">(광고) 구독하고 쿠폰받기!?</span>
+            <span class="board-date">2025-08-25</span>
+          </li>
+          <li class="board-item">
+            <span class="badge">EVENT</span>
+            <span class="board-text">(광고) 구독하고 쿠폰받기!?</span>
+            <span class="board-date">2025-08-25</span>
+          </li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script th:src="@{/js/overview.js}"></script>
+</body>
+</html>

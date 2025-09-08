@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>고객사 상세 • 보안 콘솔</title>
+
+  <!-- 공통 사이드바/타이포 -->
+  <link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
+  <!-- 고객사 전용 CSS (목록/상세 공용) -->
+  <link rel="stylesheet" th:href="@{/css/customers.css}" href="/css/customers.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- 활성 메뉴 = customers -->
+    <div th:replace="~{fragments/nav :: sidebar(active=${'customers'}, mode=${'admin'})}"></div>
+
+    <main class="content">
+      <!-- 헤더 -->
+      <header class="page-head">
+        <div>
+          <h1 id="custTitle" class="h1">고객사 상세</h1>
+          <div id="custMeta" class="muted">-</div>
+        </div>
+        <div class="center">
+          <a class="btn" href="/customers">← 목록으로</a>
+        </div>
+      </header>
+
+      <!-- ✅ 고객사 프로필 (접기/펼치기 가능) -->
+      <section class="card" id="profileCard" data-collapsed="true">
+        <div class="card-head">
+          <strong>고객사 정보</strong>
+          <div class="center" id="profileHeaderBtns">
+            <button class="btn ghost" id="btnToggleProfile" aria-expanded="false" aria-controls="profileContent profileEmpty" title="접기/펼치기">
+              <span style="display:inline-flex;align-items:center;gap:6px">
+                <svg class="chev" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>접기</span>
+              </span>
+            </button>
+            <button class="btn" id="btnLoadProfile">고객사 정보 불러오기</button>
+            <!-- 로드 후 JS가 표시 -->
+            <button class="btn hidden" id="btnEdit">수정</button>
+          </div>
+        </div>
+
+        <!-- 아직 안 불러온 상태 안내 -->
+        <div id="profileEmpty" class="card-body">
+          <div class="muted">아직 고객사 정보를 불러오지 않았습니다. 우측 상단의 <b>고객사 정보 불러오기</b> 버튼을 눌러 주세요.</div>
+        </div>
+
+        <!-- 불러온 후 표시되는 폼 -->
+        <div id="profileContent" class="card-body hidden">
+          <input type="hidden" id="custId">
+
+          <div class="form-grid">
+            <label for="code">회사 코드</label>
+            <input id="code" placeholder="예: mg" autocomplete="off" disabled>
+
+            <label for="name">회사명</label>
+            <input id="name" placeholder="예: MG 주식회사" disabled>
+
+            <!-- 제거된 담당자 필드들 -->
+
+            <label for="cpiRate">CPI %</label>
+            <input id="cpiRate" type="number" step="0.01" min="0" max="100" disabled>
+
+            <label for="rsRate">RS %</label>
+            <input id="rsRate" type="number" step="0.01" min="0" max="100" disabled>
+
+            <label for="note">비고</label>
+            <textarea id="note" rows="3" placeholder="메모/특이사항" disabled></textarea>
+          </div>
+
+          <div id="formMsg" class="muted" style="margin-top:8px;min-height:18px"></div>
+
+          <div class="card-foot actions-end">
+            <button class="btn hidden" id="btnReset">되돌리기</button>
+            <button class="btn danger hidden" id="btnDelete">삭제</button>
+            <button class="btn primary hidden" id="btnSave">저장</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 👤 담당자 카드 -->
+      <section class="card" id="contactsCard">
+        <div class="card-head">
+          <strong>담당자</strong>
+          <div class="center">
+            <button class="btn" id="btnOpenContact">담당자 추가</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="tblContacts" style="width:100%">
+            <colgroup>
+              <col style="width:160px">
+              <col style="width:240px">
+              <col style="width:160px">
+              <col>
+              <col style="width:140px">
+            </colgroup>
+            <thead>
+            <tr>
+              <th>이름</th>
+              <th>이메일</th>
+              <th>연락처</th>
+              <th>비고</th>
+              <th>작업</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="contactsInfo" class="caption">-</div>
+      </section>
+
+      <!-- 요약 카드 -->
+      <section class="stat-cards">
+        <div class="stat">
+          <div class="label">누적 유입 (Downloads)</div>
+          <div id="statDownloads" class="value">-</div>
+        </div>
+        <div class="stat">
+          <div class="label">누적 삭제 (Deletes)</div>
+          <div id="statDeletes" class="value">-</div>
+        </div>
+        <div class="stat">
+          <div class="label">누적 정산 금액</div>
+          <div id="statAmount" class="value">-</div>
+        </div>
+      </section>
+
+      <!-- 월별 테이블 -->
+      <section class="card" style="padding:0">
+        <div class="card-subhead">
+          <div class="center">
+            <strong>월별 집계</strong>
+            <span class="muted">· 최신월부터</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="tblMonthly">
+            <colgroup>
+              <col style="width:120px">
+              <col style="width:140px">
+              <col style="width:140px">
+              <col>
+              <col style="width:140px">
+            </colgroup>
+            <thead>
+            <tr>
+              <th>월(YYYY-MM)</th>
+              <th class="num">Downloads</th>
+              <th class="num">Deletes</th>
+              <th>정산금액</th>
+              <th>상태</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="listInfo" class="caption">-</div>
+      </section>
+
+      <!-- 🔐 보안 이벤트 -->
+      <section class="card" id="securityEventsCard">
+        <div class="card-head">
+          <strong>보안 이벤트</strong>
+          <div class="center" style="gap:8px;display:flex;align-items:center">
+            <label class="muted">기간</label>
+            <input type="date" id="evFrom">
+            <span>~</span>
+            <input type="date" id="evTo">
+            <select id="evType">
+              <option value="">전체</option>
+              <option value="MALWARES_APP">악성앱</option>
+              <option value="ROOTING_DETECTED">루팅</option>
+              <option value="REMOTE_CONTROL_APP">원격제어</option>
+            </select>
+            <button class="btn" id="btnEvLoad">조회</button>
+          </div>
+        </div>
+
+        <!-- 요약 타일 -->
+        <section class="stat-cards" style="padding-top:8px">
+          <div class="stat">
+            <div class="label">총 이벤트</div>
+            <div id="evTotal" class="value">-</div>
+          </div>
+          <div class="stat">
+            <div class="label">악성앱</div>
+            <div id="evMalware" class="value">-</div>
+          </div>
+          <div class="stat">
+            <div class="label">루팅</div>
+            <div id="evRooting" class="value">-</div>
+          </div>
+          <div class="stat">
+            <div class="label">원격제어</div>
+            <div id="evRemote" class="value">-</div>
+          </div>
+        </section>
+
+        <div class="table-wrap">
+          <table class="table" id="tblEvents" style="width:100%">
+            <colgroup>
+              <col style="width:170px"><!-- 시간 -->
+              <col style="width:160px"><!-- 유형 -->
+              <col style="width:220px"><!-- objectId -->
+              <col style="width:340px"><!-- 악성앱 패키지 -->
+              <col style="width:220px"><!-- 악성앱 유형 -->
+              <col style="width:130px"><!-- IP -->
+            </colgroup>
+            <thead>
+            <tr>
+              <th>시간</th>
+              <th>유형</th>
+              <th>ObjectId(디바이스)</th>
+              <th>악성앱 패키지</th>
+              <th>악성앱 유형</th> <!-- ✅ 추가 -->
+              <th>IP</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card-foot actions-between">
+          <div id="evInfo" class="caption">-</div>
+          <div>
+            <button class="btn ghost" id="evPrev">이전</button>
+            <button class="btn ghost" id="evNext">다음</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ✅ 담당자 추가 모달 -->
+  <div class="modal-backdrop" id="contactModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document" aria-labelledby="contactModalTitle">
+      <header>
+        <h3 id="contactModalTitle">담당자 추가</h3>
+        <button class="btn ghost" id="btnCloseContact" aria-label="닫기">✖</button>
+      </header>
+
+      <div class="content">
+        <input type="hidden" id="contactCustomerCode">
+        <div class="form-grid">
+          <label for="cmName">이름</label>
+          <input id="cmName" placeholder="담당자 이름" autocomplete="off">
+          <label for="cmEmail">이메일</label>
+          <input id="cmEmail" type="email" placeholder="name@example.com" autocomplete="off">
+          <label for="cmPhone">연락처</label>
+          <input id="cmPhone" placeholder="010-1234-5678" autocomplete="off">
+          <label for="cmNote">메모</label>
+          <textarea id="cmNote" rows="3" placeholder="비고/특이사항"></textarea>
+        </div>
+        <div id="contactFormErr" class="error"></div>
+      </div>
+
+      <footer>
+        <div class="actions">
+          <button class="btn" id="btnContactReset">초기화</button>
+          <button class="btn primary" id="btnSaveContact">저장</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script th:src="@{/js/auth_ui.js}" src="/js/auth_ui.js" defer></script>
+  <script th:src="@{/js/customer_detail.js}" src="/js/customer_detail.js" defer></script>
+  <script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
+
+  <!-- 프로필 카드 토글 + 이벤트 기본기간(최근 7일) 세팅 -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 프로필 카드 토글
+    const card = document.getElementById('profileCard');
+    const btn  = document.getElementById('btnToggleProfile');
+    if (card && btn) {
+      const label = btn.querySelector('span > span');
+      const chev  = btn.querySelector('.chev');
+      let collapsed = (card.dataset.collapsed === 'true');
+      const apply = () => {
+        card.dataset.collapsed = collapsed ? 'true' : 'false';
+        btn.setAttribute('aria-expanded', String(!collapsed));
+        if (label) label.textContent = collapsed ? '펼치기' : '접기';
+        if (chev)  chev.style.transform = collapsed ? 'rotate(-90deg)' : '';
+      };
+      apply();
+      btn.addEventListener('click', () => { collapsed = !collapsed; apply(); });
+    }
+
+    // 🔐 보안 이벤트 기간 기본값: 최근 7일
+    const fromEl = document.getElementById('evFrom');
+    const toEl   = document.getElementById('evTo');
+    const btnEv  = document.getElementById('btnEvLoad');
+
+    function setDefaultWeekIfEmpty() {
+      const today = new Date();
+      const to = today.toISOString().slice(0,10);
+      const fromDate = new Date(today.getTime() - 6*24*3600*1000);
+      const from = fromDate.toISOString().slice(0,10);
+      if (fromEl && !fromEl.value) fromEl.value = from;
+      if (toEl && !toEl.value)     toEl.value   = to;
+    }
+
+    setDefaultWeekIfEmpty();
+
+    btnEv?.addEventListener('click', () => {
+      setDefaultWeekIfEmpty();
+      // 실제 조회는 customer_detail.js에서 수행
+    });
+  });
+  </script>
+</body>
+</html>

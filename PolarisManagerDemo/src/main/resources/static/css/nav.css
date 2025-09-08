@@ -1,0 +1,162 @@
+/* ===== 레이아웃 ===== */
+html, body {
+  margin: 0;
+  padding: 0;   /* 🔥 body 기본 padding 제거 */
+  height: 100%;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;  /* 사이드바 + 메인 */
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* ===== 사이드바 ===== */
+.sidebar{
+  width:260px; min-width:260px;          
+  background:#f8fafc;        /* 밝은 배경 */
+  color:#111827;
+  border-right:1px solid #e5e7eb;
+  display:flex; flex-direction:column;
+  height:100vh;
+  position:sticky; top:0;
+  box-sizing:border-box;
+  overflow:hidden;
+  margin:0; 
+  padding:0;                 /* 좌우 마진/패딩 제거 → 딱 붙음 */
+}
+
+/* 브랜드 */
+.sidebar .brand{
+  padding:14px 16px;
+  display:flex; align-items:center; gap:10px;
+  margin:0;
+}
+
+/* 섹션 라벨 */
+.sidebar .section-label{
+  font-size:12px; font-weight:700;
+  color:#6b7280; padding:8px 16px 4px;
+  margin:0;
+}
+
+/* 메뉴 */
+.sidebar .menu{
+  flex:1; overflow:auto;
+  padding:4px 8px 8px;
+  margin:0;
+}
+.sidebar .menu .menu-item{
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none; color:#374151;
+  padding:10px 12px; margin:6px 8px;
+  border-radius:10px;
+}
+.sidebar .menu .menu-item:hover{ background:#e5e7eb; }
+.sidebar .menu .menu-item.active{ background:#2563eb; color:#fff; }
+
+/* ===== 하단 유저 박스 ===== */
+.sidebar-footer{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:260px;
+  border-top:1px solid #e5e7eb;
+  background:#f8fafc;   /* nav랑 같은 색으로 변경 */
+  padding:10px;
+  box-sizing:border-box;
+  margin:0;
+}
+
+.user-pill{
+  display:flex; align-items:center; gap:8px;
+}
+
+.user-pill .uid{
+  flex:1; min-width:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  font-weight:700; color:#111827;
+}
+
+.user-pill .role{
+  font-size:12px; color:#6b7280;
+  flex-shrink:0;
+}
+
+.logout{
+  border:1px solid #e5e7eb; background:#fff;
+  border-radius:8px; padding:6px; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.logout:hover{ background:#f3f4f6; }
+
+.sidebar-footer{
+  position:fixed; bottom:0; left:0; width:260px;
+  border-top:1px solid #e5e7eb; background:#f8fafc;
+  padding:10px; box-sizing:border-box; margin:0;
+}
+
+.user-pill{ display:flex; align-items:center; gap:8px; }
+
+.footer-actions{ margin-left:auto; display:flex; gap:8px; }
+.icon-btn{
+  border:1px solid #e5e7eb; background:#fff;
+  border-radius:8px; padding:6px; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.icon-btn:hover{ background:#f3f4f6; }
+
+/* 이메일 라인 */
+#navEmail{
+  margin-top:4px; font-size:12px; color:#6b7280;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}* 로그인 페이지는 사이드바 완전 숨김 + 1열 */
+.page-auth .sidebar { display: none !important; }
+.page-auth .layout  { grid-template-columns: 1fr !important; }
+
+/* 이미 있는 .sidebar/.menu 스타일은 그대로 두고, 아래만 추가하세요 */
+
+/* --- PORTAL(ul.nav-menu) 공통 리셋 --- */
+.sidebar .nav-menu{
+  list-style: none;
+  margin: 0;
+  padding: 4px 8px 8px;     /* .menu와 통일 */
+}
+
+/* 항목 스타일 (.menu .menu-item과 동일하게) */
+.sidebar .nav-menu .nav-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #374151;
+  padding: 10px 12px;
+  margin: 6px 8px;
+  border-radius: 10px;
+}
+
+/* hover / active */
+.sidebar .nav-menu .nav-item:hover{ background:#e5e7eb; }
+.sidebar .nav-menu .nav-item.is-active,
+.sidebar .nav-menu .nav-item.active{ background:#2563eb; color:#fff; }
+
+/* 포털 섹션 라벨(원하면) */
+.sidebar .nav-section-label{
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  padding: 8px 16px 4px;
+  margin: 0;
+}
+
+/* 불릿이나 들여쓰기 강제 제거 (안전장치) */
+.sidebar .nav-menu > li{ list-style:none; margin:0; padding:0; }
+.sidebar .nav-menu{ list-style:none; margin:0; padding:4px 8px 8px; }
+.sidebar .nav-menu .nav-item{
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none; color:#374151;
+  padding:10px 12px; margin:6px 8px; border-radius:10px;
+}
+.sidebar .nav-menu .nav-item:hover{ background:#e5e7eb; }
+.sidebar .nav-menu .nav-item.is-active{ background:#2563eb; color:#fff; }

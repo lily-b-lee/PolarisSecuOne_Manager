@@ -1,0 +1,183 @@
+/* ===============================
+   로그인 페이지 레이아웃 & 카드
+   =============================== */
+
+/* 레이아웃: nav.css의 .layout/.content를 사용, 여기선 가운데 정렬 */
+.auth-main {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* 로그인 카드 */
+.auth-card {
+  width: 100%;
+  max-width: 400px;        /* 카드 폭 제한 */
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.08);
+  padding: 28px 28px 24px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.auth-head .welcome {
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+.auth-head h1 {
+  margin: 8px 0 6px;
+  font-size: 26px;
+  font-weight: 800;
+}
+.auth-head .sub {
+  margin: 0;
+  color: #6b7280;
+}
+
+/* ===============================
+   로그인 유형 탭 (세그먼트)
+   =============================== */
+.seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 4px;
+  background: #f8fafc;
+  margin: 12px 0 10px;
+}
+.seg-btn {
+  border: 0;
+  background: transparent;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: background .15s;
+}
+.seg-btn:hover { background: #eef2ff; }
+.seg-btn.active { background: #2563eb; color: #fff; }
+
+/* ===============================
+   폼 필드
+   =============================== */
+.field { display: block; margin: 14px 0; }
+.field > span {
+  display: block;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 8px;
+}
+.field input {
+  box-sizing: border-box;   /* ✅ 삐져나옴 방지 */
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font: inherit;
+  background: #fff;
+}
+.field input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+/* ===============================
+   비밀번호 토글
+   =============================== */
+.pwbox { position: relative; overflow: hidden; }
+.pwbox input { padding-right: 42px; }
+.pw-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px;
+  font-size: 16px;
+}
+
+/* ===============================
+   안내/에러 메시지
+   =============================== */
+.muted { color: #6b7280; }
+.small { font-size: 12px; }
+.err {
+  min-height: 18px;
+  color: #b91c1c;
+  font-size: 13px;
+  margin: 6px 0 2px;
+}
+
+/* ===============================
+   버튼
+   =============================== */
+.btn {
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  box-sizing: border-box;
+}
+.btn.primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.btn.large {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+.btn[disabled] { opacity: .7; cursor: not-allowed; }
+
+/* 회원가입 버튼 */
+.btn.secondary {
+  background: #eef2ff;
+  color: #1e3a8a;
+  border: 1px solid #cbd5e1;
+}
+
+/* ===============================
+   비밀번호 찾기 링크
+   =============================== */
+.auth-links {
+  margin-top: 14px;
+  text-align: center;
+}
+.auth-links .forgot-link {
+  font-size: 13px;
+  color: #6b7280;
+  text-decoration: none;
+}
+.auth-links .forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* ===============================
+   로그인 페이지 전용 중앙 정렬
+   =============================== */
+.page-auth .auth-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0;
+  box-sizing: border-box;
+}

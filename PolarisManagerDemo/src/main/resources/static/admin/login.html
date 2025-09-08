@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>관리자 로그인</title>
+<link rel="stylesheet" href="/css/app.css">
+<style>
+  .wrap{max-width:420px;margin:80px auto;padding:24px}
+  h1{margin:0 0 16px;font-size:22px}
+  .card{border:1px solid #ddd;border-radius:10px;padding:20px}
+  .row{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;margin:10px 0}
+  .row input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px}
+  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .error{color:#c00;font-size:12px;margin-top:6px;min-height:18px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>관리자 로그인</h1>
+    <div class="card">
+      <div class="row">
+        <label for="username">아이디</label>
+        <input id="username" autocomplete="username" autofocus>
+      </div>
+      <div class="row">
+        <label for="password">비밀번호</label>
+        <input id="password" type="password" autocomplete="current-password">
+      </div>
+	<div class="actions">
+	  <a class="btn" href="/admin/signup.html">회원가입</a>
+	  <button class="btn primary" id="loginBtn">로그인</button>
+	</div>
+
+      <div class="error" id="err"></div>
+    </div>
+  </div>
+<script src="/js/admin_login.js"></script>
+</body>
+</html>
