@@ -1,9 +1,7 @@
 package com.polarisoffice.secuone.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 import javax.crypto.SecretKey;
@@ -23,27 +21,34 @@ public class JwtTokenService {
     public String create(String subject) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + validityMs);
+
         return Jwts.builder()
-                .setSubject(subject)
-                .setIssuedAt(now)
-                .setExpiration(exp)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .subject(subject)                // 0.12 스타일
+                .issuedAt(now)
+                .expiration(exp)
+                .signWith(key, Jwts.SIG.HS256)   // (SecretKey, MacAlgorithm)
                 .compact();
     }
 
+    /** 0.12: parser().verifyWith(key).build().parseSignedClaims(token).getPayload() */
     public Claims parse(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
+        return Jwts.parser()
+                .verifyWith(key)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    /** 기존 호출부(JwtAuthFilter)가 기대하는 시그니처 맞추기용 */
+    public Claims decode(String token) {
+        return parse(token);
     }
 
     public boolean validate(String token) {
         try {
             parse(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
+        } catch (RuntimeException e) {
             return false;
         }
     }
