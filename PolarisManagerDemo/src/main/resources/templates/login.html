@@ -1,78 +1,39 @@
 <!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <!-- 앱 컨텍스트(base) 주입 -->
-  <meta name="app-base" th:content="@{/}">
-  <title>로그인 • 보안 콘솔</title>
-
-  <!-- 스타일 -->
-  <link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
-  <link rel="stylesheet" th:href="@{/css/login.css}" href="/css/login.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>관리자 로그인</title>
+<link rel="stylesheet" href="/css/app.css">
+<style>
+  .wrap{max-width:420px;margin:80px auto;padding:24px}
+  h1{margin:0 0 16px;font-size:22px}
+  .card{border:1px solid #ddd;border-radius:10px;padding:20px}
+  .row{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;margin:10px 0}
+  .row input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px}
+  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .error{color:#c00;font-size:12px;margin-top:6px;min-height:18px}
+</style>
 </head>
-<body class="page-auth"><!-- 로그인 페이지 플래그 -->
-
-  <div class="layout">
-    <!-- 🔒 로그인 페이지는 사이드바를 렌더하지 않습니다. (프래그먼트 포함 제거) -->
-
-    <main class="content auth-main">
-      <div class="auth-card" role="dialog" aria-labelledby="authTitle">
-        <header class="auth-head">
-          <div class="welcome">WELCOME SECUONE</div>
-          <h1 id="authTitle">Sign in to</h1>
-          <p class="sub">Please sign in with your account</p>
-        </header>
-
-        <!-- 로그인 폼 -->
-        <form id="loginForm" novalidate>
-          <!-- 로그인 유형 탭 -->
-          <div class="seg" role="tablist" aria-label="로그인 유형">
-            <button type="button" id="tabAdmin" class="seg-btn active"
-                    role="tab" aria-selected="true" data-mode="admin">관리자</button>
-            <button type="button" id="tabCustomer" class="seg-btn"
-                    role="tab" aria-selected="false" data-mode="customer">고객사</button>
-          </div>
-
-          <label class="field">
-            <span>E-mail</span>
-            <input id="username" autocomplete="username" placeholder="Enter your E-mail">
-          </label>
-
-          <label class="field">
-            <span>Password</span>
-            <div class="pwbox">
-              <input id="password" type="password" autocomplete="current-password" placeholder="Enter your Password">
-              <button type="button" class="pw-toggle" id="pwToggle" aria-label="비밀번호 보기/숨기기">👁</button>
-            </div>
-          </label>
-
-          <!-- 고객사 모드에서만 노출 -->
-          <div id="customerCodeRow" class="field" style="display:none">
-            <span>고객사 코드</span>
-            <input id="customerCode" placeholder="예: mg, vguard 등">
-            <p class="muted small">고객사 계정은 ‘고객사’ 탭을 선택하고 고객사 코드를 입력하세요.</p>
-          </div>
-
-          <!-- 서버/클라이언트 에러 -->
-          <div id="err" class="err" role="alert" aria-live="polite"></div>
-
-          <!-- 액션 -->
-          <button id="loginBtn" type="button" class="btn primary large">LOGIN</button>
-          <button id="signupBtn" type="button" class="btn large" style="margin-top:10px;">SIGN UP</button>
-
-          <p class="muted small" style="text-align:center; margin-top:12px;">
-            <a class="forgot-link" th:href="@{/forgot-password}" href="/forgot-password">비밀번호를 잊으셨나요?</a>
-          </p>
-
-          <!-- 로그인 후 이동 파라미터(있을 때만) -->
-          <input type="hidden" id="next" name="next" th:if="${next}" th:value="${next}">
-        </form>
+<body>
+  <div class="wrap">
+    <h1>관리자 로그인</h1>
+    <div class="card">
+      <div class="row">
+        <label for="username">아이디</label>
+        <input id="username" autocomplete="username" autofocus>
       </div>
-    </main>
-  </div>
+      <div class="row">
+        <label for="password">비밀번호</label>
+        <input id="password" type="password" autocomplete="current-password">
+      </div>
+	<div class="actions">
+	  <a class="btn" href="/admin/signup.html">회원가입</a>
+	  <button class="btn primary" id="loginBtn">로그인</button>
+	</div>
 
-  <!-- 스크립트: 로그인 페이지는 nav.js 불필요 -->
-  <script defer th:src="@{/js/login.js}" src="/js/login.js"></script>
+      <div class="error" id="err"></div>
+    </div>
+  </div>
+<script src="/js/admin_login.js"></script>
 </body>
 </html>
