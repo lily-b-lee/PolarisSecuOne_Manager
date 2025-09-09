@@ -72,4 +72,108 @@ public class SettlementEntity {
     if (createdAt == null) createdAt = Instant.now();
   }
 
+  public Long getId() {
+	return id;
+  }
+
+  public void setId(Long id) {
+	this.id = id;
+  }
+
+  public CustomerEntity getCustomer() {
+	return customer;
+  }
+
+  public void setCustomer(CustomerEntity customer) {
+	this.customer = customer;
+  }
+
+  public String getSettleMonth() {
+	return settleMonth;
+  }
+
+  public void setSettleMonth(String settleMonth) {
+	this.settleMonth = settleMonth;
+  }
+
+  public Long getDownloads() {
+	return downloads;
+  }
+
+  public void setDownloads(Long downloads) {
+	this.downloads = downloads;
+  }
+
+  public Long getDeletes() {
+	return deletes;
+  }
+
+  public void setDeletes(Long deletes) {
+	this.deletes = deletes;
+  }
+
+  public BigDecimal getCpiRate() {
+	return cpiRate;
+  }
+
+  public void setCpiRate(BigDecimal cpiRate) {
+	this.cpiRate = cpiRate;
+  }
+
+  public BigDecimal getRsRate() {
+	return rsRate;
+  }
+
+  public void setRsRate(BigDecimal rsRate) {
+	this.rsRate = rsRate;
+  }
+
+  public BigDecimal getCpiAmount() {
+	return cpiAmount;
+  }
+
+  public void setCpiAmount(BigDecimal cpiAmount) {
+	this.cpiAmount = cpiAmount;
+  }
+
+  public BigDecimal getRsAmount() {
+	return rsAmount;
+  }
+
+  public void setRsAmount(BigDecimal rsAmount) {
+	this.rsAmount = rsAmount;
+  }
+
+  public BigDecimal getTotalAmount() {
+	return totalAmount;
+  }
+
+  public void setTotalAmount(BigDecimal totalAmount) {
+	this.totalAmount = totalAmount;
+  }
+
+  public String getCurrency() {
+	return currency;
+  }
+
+  public void setCurrency(String currency) {
+	this.currency = currency;
+  }
+
+  public String getMemo() {
+	return memo;
+  }
+
+  public void setMemo(String memo) {
+	this.memo = memo;
+  }
+
+  public Instant getCreatedAt() {
+	return createdAt;
+  }
+
+  public void setCreatedAt(Instant createdAt) {
+	this.createdAt = createdAt;
+  }
+
 }

@@ -24,6 +24,10 @@ public class HomeController {
   public HomeController(CustomerRepository customerRepo) {
     this.customerRepo = customerRepo;
   }
+  @GetMapping("/")
+  public String home() {
+    return "redirect:/overview";
+  }
 
   /** 관리자/공용 오버뷰 */
   @GetMapping("/overview")
