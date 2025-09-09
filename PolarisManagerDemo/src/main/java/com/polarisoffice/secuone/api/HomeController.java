@@ -26,7 +26,7 @@ public class HomeController {
   }
   @GetMapping("/")
   public String home() {
-    return "redirect:/overview";
+    return "redirect:/login";
   }
 
   /** 관리자/공용 오버뷰 */
