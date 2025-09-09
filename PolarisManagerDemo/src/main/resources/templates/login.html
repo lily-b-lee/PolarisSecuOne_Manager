@@ -1,39 +1,71 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>관리자 로그인</title>
-<link rel="stylesheet" href="/css/app.css">
-<style>
-  .wrap{max-width:420px;margin:80px auto;padding:24px}
-  h1{margin:0 0 16px;font-size:22px}
-  .card{border:1px solid #ddd;border-radius:10px;padding:20px}
-  .row{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;margin:10px 0}
-  .row input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px}
-  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-  .error{color:#c00;font-size:12px;margin-top:6px;min-height:18px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- 백엔드가 서브패스로 뒤집힐 수도 있으니 BASE 힌트 -->
+  <meta name="app-base" content="/" />
+  <title>로그인</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .wrap{max-width:480px;margin:80px auto;padding:24px}
+    h1{margin:0 0 16px;font-size:22px}
+    .card{border:1px solid #ddd;border-radius:10px;padding:20px}
+    .row{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;margin:10px 0}
+    .row input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .error{color:#c00;font-size:12px;margin-top:6px;min-height:18px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer}
+    .btn.primary{background:#111827;color:#fff;border-color:#111827}
+    .seg{display:flex;border:1px solid #d1d5db;border-radius:10px;overflow:hidden;margin:12px 0}
+    .seg-btn{flex:1;text-align:center;padding:10px 12px;background:#f9fafb;cursor:pointer;border-right:1px solid #e5e7eb;user-select:none}
+    .seg-btn:last-child{border-right:none}
+    .seg-btn.active{background:#111827;color:#fff}
+    .input-with-icon{display:flex;align-items:center;gap:8px}
+    .input-with-icon button{border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
+  </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>관리자 로그인</h1>
+    <h1>로그인</h1>
+
+    <!-- 관리자 / 고객사 탭 -->
+    <div class="seg" role="tablist" aria-label="Login Mode">
+      <div id="tabAdmin" class="seg-btn active" role="tab" data-mode="admin" aria-selected="true">관리자 로그인</div>
+      <div id="tabCustomer" class="seg-btn" role="tab" data-mode="customer" aria-selected="false">고객사 로그인</div>
+    </div>
+
     <div class="card">
-      <div class="row">
-        <label for="username">아이디</label>
-        <input id="username" autocomplete="username" autofocus>
-      </div>
-      <div class="row">
-        <label for="password">비밀번호</label>
-        <input id="password" type="password" autocomplete="current-password">
-      </div>
-	<div class="actions">
-	  <a class="btn" href="/admin/signup.html">회원가입</a>
-	  <button class="btn primary" id="loginBtn">로그인</button>
-	</div>
+      <form id="loginForm">
+        <div class="row">
+          <label for="username">아이디</label>
+          <input id="username" name="username" autocomplete="username" autofocus>
+        </div>
+
+        <div class="row">
+          <label for="password">비밀번호</label>
+          <div class="input-with-icon">
+            <input id="password" name="password" type="password" autocomplete="current-password">
+            <button type="button" id="pwToggle" aria-label="비밀번호 보기/숨기기">보기</button>
+          </div>
+        </div>
+
+        <!-- 고객사 로그인용 추가 입력 -->
+        <div class="row" id="customerCodeRow" style="display:none">
+          <label for="customerCode">고객사 코드</label>
+          <input id="customerCode" name="customerCode" placeholder="예) mg">
+        </div>
+
+        <div class="actions">
+          <a class="btn" id="signupBtn" href="/signup">회원가입</a>
+          <button type="submit" class="btn primary" id="loginBtn">로그인</button>
+        </div>
+      </form>
 
       <div class="error" id="err"></div>
     </div>
   </div>
-<script src="/js/admin_login.js"></script>
+
+  <script src="/js/login.js"></script>
 </body>
 </html>
