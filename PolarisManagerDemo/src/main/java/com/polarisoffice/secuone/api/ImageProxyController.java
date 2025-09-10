@@ -24,6 +24,8 @@ public class ImageProxyController {
       "wiki.polarisoffice.com",
       "postfiles.pstatic.net"
   );
+  
+  
   private static final List<String> ALLOW_SUFFIXES = List.of(
       ".pstatic.net", ".naver.com", ".naver.net"
   );
@@ -32,6 +34,8 @@ public class ImageProxyController {
   private static final String UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
       + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+  
+  
   private static ProxySelector buildProxySelectorFromEnv() {
     try {
       String https = System.getenv("HTTPS_PROXY");
