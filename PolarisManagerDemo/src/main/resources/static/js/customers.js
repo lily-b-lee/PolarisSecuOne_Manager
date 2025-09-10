@@ -1,11 +1,11 @@
-// /js/customers.js
+// static/js/customers.js
 (() => {
   const $ = (s) => document.querySelector(s);
 
-  // API 엔드포인트 (필요시 조정)
+  // API 엔드포인트
   const API = '/api/admin/customers';
 
-  const state = { rows: [], editingId: null };
+  const state = { rows: [], editingCode: null };
 
   // --- auth helpers ---
   const getToken = () => localStorage.getItem('admin_token') || null;
@@ -20,9 +20,9 @@
   const fmtPct = (v) => {
     if (v === null || v === undefined) return '-';
     const n = Number(v);
-    return isFinite(n) ? `${n.toFixed(2)}%` : `${v}%`;
+    return Number.isFinite(n) ? `${n.toFixed(2)}%` : `${v}%`;
   };
-  function showErr(msg) { const el = $('#formErr'); if (el) el.textContent = msg || ''; }
+  const showErr = (msg) => { const el = $('#formErr'); if (el) el.textContent = msg || ''; };
 
   // --- modal helpers ---
   function openModal(title) {
@@ -42,16 +42,18 @@
 
   // --- form helpers ---
   function fillForm(c) {
-    $('#custId').value = nz(c?.id, '');
-    $('#code').value = nz(c?.code, '');
-    $('#name').value = nz(c?.name, '');
-    $('#cpiRate').value = nz(c?.cpiRate, 0);
-    $('#rsRate').value  = nz(c?.rsRate, 0);
+    // PK는 code
+    $('#custCode').value = nz(c?.code, '');
+    $('#code').value     = nz(c?.code, '');
+    $('#name').value     = nz(c?.name, '');
+    // 서버 필드 우선 + 백워드 호환
+    $('#cpiRate').value = nz(c?.cpiValue ?? c?.cpiRate, 0);
+    $('#rsRate').value  = nz(c?.rsPercent ?? c?.rsRate, 0);
     $('#note').value    = nz(c?.note, '');
   }
   function resetForm() {
     fillForm(null);
-    state.editingId = null;
+    state.editingCode = null;
   }
 
   // --- API calls ---
@@ -60,7 +62,8 @@
     const res = await fetch(url, { headers: authHeaders(), credentials: 'same-origin' });
     if (res.status === 401 || res.status === 403) {
       const next = encodeURIComponent(location.pathname + location.search);
-      location.href = `/admin/login.html?next=${next}`;
+      // HomeController는 /admin/login (템플릿) 사용
+      location.href = `/admin/login?next=${next}`;
       return [];
     }
     if (!res.ok) {
@@ -78,13 +81,13 @@
     });
     const data = await res.json().catch(()=> ({}));
     if (!res.ok) {
-      const msg = data?.message || `생성 실패(HTTP ${res.status})`;
-      throw new Error(msg);
+      if (res.status === 409) throw new Error(data?.message || '이미 존재하는 회사 코드입니다.');
+      throw new Error(data?.message || `생성 실패(HTTP ${res.status})`);
     }
     return data;
   }
-  async function update(id, payload) {
-    const res = await fetch(`${API}/${id}`, {
+  async function update(code, payload) {
+    const res = await fetch(`${API}/${encodeURIComponent(code)}`, {
       method: 'PATCH',
       headers: authHeaders(),
       body: JSON.stringify(payload),
@@ -92,13 +95,13 @@
     });
     const data = await res.json().catch(()=> ({}));
     if (!res.ok) {
-      const msg = data?.message || `수정 실패(HTTP ${res.status})`;
-      throw new Error(msg);
+      if (res.status === 409) throw new Error(data?.message || '중복/제약으로 수정 실패');
+      throw new Error(data?.message || `수정 실패(HTTP ${res.status})`);
     }
     return data;
   }
-  async function remove(id) {
-    const res = await fetch(`${API}/${id}`, {
+  async function remove(code) {
+    const res = await fetch(`${API}/${encodeURIComponent(code)}`, {
       method: 'DELETE',
       headers: authHeaders(),
       credentials: 'same-origin',
@@ -122,18 +125,21 @@
 
     const frag = document.createDocumentFragment();
     rows.forEach((c) => {
-      const id = c.id ?? c.customerId ?? c.code; // 안전한 식별자 추출
+      const code = c.code; // PK 확정
+      const cpi  = (c.cpiValue ?? c.cpiRate);
+      const rs   = (c.rsPercent ?? c.rsRate);
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${c.code || '-'}</td>
         <td>${c.name || '-'}</td>
-        <td style="text-align:right">${fmtPct(c.cpiRate)}</td>
-        <td style="text-align:right">${fmtPct(c.rsRate)}</td>
+        <td style="text-align:right">${fmtPct(cpi)}</td>
+        <td style="text-align:right">${fmtPct(rs)}</td>
         <td>
           <div class="quick">
-            <button class="btn" data-act="detail" data-id="${id ?? ''}">상세</button>
-            <button class="btn" data-act="edit" data-id="${id ?? ''}">수정</button>
-            <button class="btn" data-act="del" data-id="${id ?? ''}">삭제</button>
+            <button class="btn" data-act="detail" data-code="${code ?? ''}">상세</button>
+            <button class="btn" data-act="edit" data-code="${code ?? ''}">수정</button>
+            <button class="btn" data-act="del" data-code="${code ?? ''}">삭제</button>
           </div>
         </td>
       `;
@@ -141,8 +147,8 @@
       // 행 클릭 → 상세 (버튼 클릭과 구분)
       tr.addEventListener('click', (e) => {
         if (e.target?.dataset?.act) return; // 버튼이면 무시
-        if (!id) return;
-        location.href = `/customers/detail?id=${encodeURIComponent(id)}`;
+        if (!code) return;
+        location.href = `/customers/detail?id=${encodeURIComponent(code)}`;
       });
 
       // 각 버튼 이벤트
@@ -150,18 +156,19 @@
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           const act = btn.dataset.act;
+          const codeAttr = btn.dataset.code;
+          if (!codeAttr) return;
+
           if (act === 'detail') {
-            if (!id) return alert('식별자가 없어 상세로 이동할 수 없습니다.');
-            location.href = `/customers/detail?id=${encodeURIComponent(id)}`;
+            location.href = `/customers/detail?id=${encodeURIComponent(codeAttr)}`;
           } else if (act === 'edit') {
-            state.editingId = id || null;
+            state.editingCode = codeAttr;
             fillForm(c);
             $('#code').disabled = true; // 코드 수정 방지
             openModal('고객사 수정');
           } else if (act === 'del') {
-            if (!id) return alert('식별자가 없어 삭제할 수 없습니다.');
             if (!confirm('정말 삭제하시겠습니까?')) return;
-            try { await remove(id); await refresh(); }
+            try { await remove(codeAttr); await refresh(); }
             catch (err) { alert(err.message || '삭제 실패'); }
           }
         });
@@ -188,22 +195,23 @@
   // --- save ---
   async function onSave() {
     showErr('');
-    const id = $('#custId').value || null;
+    const editing = state.editingCode; // null이면 생성 모드
     const payload = {
       code: ($('#code').value || '').trim(),
       name: ($('#name').value || '').trim(),
-      cpiRate: $('#cpiRate').value ? Number($('#cpiRate').value) : null,
-      rsRate:  $('#rsRate').value  ? Number($('#rsRate').value)  : null,
+      // 서버 필드명에 맞춰 전송
+      cpiValue:  $('#cpiRate').value ? Number($('#cpiRate').value) : null,
+      rsPercent: $('#rsRate').value  ? Number($('#rsRate').value)  : null,
       note: ($('#note').value || '').trim(),
     };
 
-    if (!id && !payload.code) return showErr('회사 코드를 입력하세요.');
+    if (!editing && !payload.code) return showErr('회사 코드를 입력하세요.');
     if (!payload.name) return showErr('회사명을 입력하세요.');
 
     try {
-      if (id) {
+      if (editing) {
         delete payload.code; // 코드 변경 방지
-        await update(id, payload);
+        await update(editing, payload);
       } else {
         await create(payload);
       }

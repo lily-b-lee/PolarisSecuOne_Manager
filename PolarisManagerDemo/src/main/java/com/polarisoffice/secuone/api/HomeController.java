@@ -1,7 +1,6 @@
 // src/main/java/com/polarisoffice/secuone/api/HomeController.java
 package com.polarisoffice.secuone.api;
 
-import com.polarisoffice.secuone.repository.CustomerRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -24,12 +23,6 @@ public class HomeController {
   private static final Pattern CODE_FROM_STRING =
       Pattern.compile("(?:customerCode|tenantCode|code)=([A-Za-z0-9_-]+)");
 
-  private final CustomerRepository customerRepo;
-
-  public HomeController(CustomerRepository customerRepo) {
-    this.customerRepo = customerRepo;
-  }
-
   /** 루트 → 로그인 */
   @GetMapping("/")
   public String home() { return "redirect:/login"; }
@@ -40,7 +33,6 @@ public class HomeController {
     String safeNext = sanitizeNext(next); // 오픈 리다이렉트 방지
     if (hasText(safeNext)) model.addAttribute("next", safeNext);
     model.addAttribute("showNav", false);
-    // 템플릿에서 기본 모드 탭 선택에 사용할 값 (admin|customer)
     model.addAttribute("defaultMode", "admin");
     return "login";
   }
@@ -63,25 +55,16 @@ public class HomeController {
     return "login";
   }
 
-  /**
-   * 관리자 회원가입 (별칭 포함)
-   * - 회원가입을 노출하지 않기로 한 정책이라면 404로 응답합니다.
-   *   노출하려면 아래 throw 라인을 제거하고 "admin_signup" 반환하세요.
-   */
+  /** 관리자 회원가입(비노출: 404) */
   @GetMapping({"/admin/signup", "/admin_signup"})
   public String adminSignup() {
     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-    // return "admin_signup";
   }
 
-  /**
-   * 고객사 회원가입 (별칭 포함)
-   * - 회원가입 미노출 정책 시 404
-   */
+  /** 고객사 회원가입(비노출: 404) */
   @GetMapping({"/customer/signup", "/customer_signup"})
   public String customerSignup() {
     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-    // return "customer_signup";
   }
 
   /** 구 주소 호환 */
@@ -162,13 +145,10 @@ public class HomeController {
   /** /login?next=... 오픈 리다이렉트 방지: 절대 URL/스킴/이중 슬래시 불허, 상대 경로만 허용 */
   private static String sanitizeNext(String next) {
     if (!hasText(next)) return null;
-    // 공백 제거
     String n = next.trim();
-    // 절대 URL, 스킴, 프로토콜 상대, 이중 슬래시 시작, CR/LF 등 불허
     if (n.startsWith("http://") || n.startsWith("https://") || n.startsWith("//")) return null;
     if (n.contains("\r") || n.contains("\n")) return null;
-    // 상대경로만 허용
-    if (n.startsWith("/")) return n;
+    if (n.startsWith("/")) return n;  // 상대경로만 허용
     return null;
   }
 
@@ -197,15 +177,15 @@ public class HomeController {
       if (hasText(fromD)) return fromD;
     }
 
+    // ✅ 레포지토리 없이 호스트에서 코드 추론
     String host = headerFirst(req.getHeader("X-Customer-Domain"));
     if (!hasText(host)) host = headerFirst(req.getHeader("X-Forwarded-Host"));
     if (!hasText(host)) host = req.getServerName();
 
     if (hasText(host)) {
       host = normalizeHost(host);
-      return customerRepo.findByDomainIgnoreCase(host)
-          .map(c -> c.getCode())
-          .orElse("mg");
+      String code = guessCodeFromHost(host);
+      if (hasText(code)) return code;
     }
     return "mg";
   }
@@ -271,10 +251,22 @@ public class HomeController {
   /** 호스트 정규화: 소문자, 포트 제거, 선행 www. 제거 */
   private static String normalizeHost(String host) {
     String h = host.toLowerCase(Locale.ROOT).trim();
-    // 포트 제거
-    h = h.replaceFirst(":\\d+$", "");
-    // 선행 www. 제거
-    if (h.startsWith("www.")) h = h.substring(4);
+    h = h.replaceFirst(":\\d+$", ""); // 포트 제거
+    if (h.startsWith("www.")) h = h.substring(4); // 선행 www. 제거
     return h;
+  }
+
+  /** 호스트명에서 고객사 코드 추론 (서브도메인 1레벨 사용) */
+  private static String guessCodeFromHost(String host) {
+    // 예: acme.console.example.com -> acme
+    String[] parts = host.split("\\.");
+    if (parts.length == 0) return null;
+    String first = parts[0];
+    // 흔한 공용/관리 서브도메인 제외
+    Set<String> ignore = Set.of("www", "app", "manager", "console", "admin");
+    if (ignore.contains(first)) return null;
+    // 코드 형식 제한(원래 코드 규칙에 맞게 조정)
+    if (first.matches("[a-z0-9_-]{2,32}")) return first;
+    return null;
   }
 }

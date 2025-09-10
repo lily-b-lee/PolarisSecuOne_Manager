@@ -1,3 +1,4 @@
+// src/main/java/com/polarisoffice/secuone/api/AdminCustomerController.java
 package com.polarisoffice.secuone.api;
 
 import com.polarisoffice.secuone.domain.CustomerEntity;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,7 @@ public class AdminCustomerController {
   // --------------------------------
 
   /** 목록/검색 (q 없으면 전체, code 오름차순) */
-  @GetMapping
+  @GetMapping(produces = "application/json")
   public List<Customers.Res> list(@RequestParam(value = "q", required = false) String q) {
     var list = (q == null || q.isBlank())
         ? repo.findAll(Sort.by(Sort.Direction.ASC, "code"))
@@ -44,7 +46,7 @@ public class AdminCustomerController {
   }
 
   /** 단건 (PK=code) */
-  @GetMapping("/{code}")
+  @GetMapping(value = "/{code}", produces = "application/json")
   public ResponseEntity<Customers.Res> get(@PathVariable String code) {
     return repo.findById(code)
         .map(c -> ResponseEntity.ok(toRes(c)))
@@ -54,16 +56,21 @@ public class AdminCustomerController {
   /** 코드 중복 체크 */
   @GetMapping("/exists")
   public Map<String, Object> exists(@RequestParam("code") String code) {
-    boolean exists = repo.existsByCode(code);
+    boolean exists = repo.existsByCodeIgnoreCase((code == null ? "" : code).trim());
     return Map.of("code", code, "exists", exists);
   }
 
   /** 생성 */
-  @PostMapping
+  @PostMapping(consumes = "application/json", produces = "application/json")
   public ResponseEntity<?> create(@Valid @RequestBody Customers.CreateReq in) {
-    String code = in.getCode().trim().toLowerCase();
-    if (repo.existsByCode(code)) {
-      return ResponseEntity.status(409).body(Map.of("message", "이미 존재하는 코드입니다."));
+    String code = (in.getCode() == null ? "" : in.getCode().trim()).toLowerCase();
+    if (code.isBlank()) {
+      return ResponseEntity.badRequest().body(Map.of("message", "회사 코드는 필수입니다."));
+    }
+    if (repo.existsByCodeIgnoreCase(code)) {
+      return ResponseEntity.status(409).body(Map.of(
+          "message", "이미 존재하는 코드입니다.", "code", code
+      ));
     }
 
     var c = new CustomerEntity();
@@ -75,11 +82,13 @@ public class AdminCustomerController {
     c.setNote(in.getNote());
 
     c = repo.save(c);
-    return ResponseEntity.ok(toRes(c));
+    return ResponseEntity
+        .created(URI.create("/api/admin/customers/" + c.getCode()))
+        .body(toRes(c));
   }
 
   /** 수정(부분 업데이트) — PK=code */
-  @PatchMapping("/{code}")
+  @PatchMapping(value = "/{code}", consumes = "application/json", produces = "application/json")
   public ResponseEntity<?> update(@PathVariable String code, @Valid @RequestBody Customers.UpdateReq in) {
     var opt = repo.findById(code);
     if (opt.isEmpty()) return ResponseEntity.notFound().build();
@@ -130,7 +139,7 @@ public class AdminCustomerController {
    * GET /api/admin/customers/{code}/stats?from=YYYY-MM&to=YYYY-MM
    * from/to 없으면 저장소 구현에서 기본 처리(예: 최근 12개월)
    */
-  @GetMapping("/{code}/stats")
+  @GetMapping(value = "/{code}/stats", produces = "application/json")
   public ResponseEntity<?> stats(@PathVariable String code,
                                  @RequestParam(required = false) String fromMonth,
                                  @RequestParam(required = false) String toMonth) {
@@ -138,7 +147,6 @@ public class AdminCustomerController {
     if (opt.isEmpty()) return ResponseEntity.notFound().build();
     var c = opt.get();
 
-    // SettlementRepository: code 기준 조회
     var rows = settlementRepo.findByFiltersCode(code, fromMonth, toMonth);
 
     long totalDownloads = 0L;
@@ -160,7 +168,7 @@ public class AdminCustomerController {
           d,
           del,
           amt,
-          s.getCurrency()   // 엔티티에 status 없음 → currency 사용
+          s.getCurrency()
       ));
     }
 
@@ -174,7 +182,6 @@ public class AdminCustomerController {
 
   // ====== mapper ======
   private Customers.Res toRes(CustomerEntity c) {
-    // 최신 DTO 구조: (code, name, integrationType, rsPercent, cpiValue, note, createdAt, updatedAt)
     return new Customers.Res(
         c.getCode(),
         c.getName(),

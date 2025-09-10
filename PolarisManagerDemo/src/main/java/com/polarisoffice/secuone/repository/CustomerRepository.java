@@ -11,35 +11,17 @@ import org.springframework.data.repository.query.Param; // ✅ 추가
 import java.util.List;
 import java.util.Optional;
 
-
 public interface CustomerRepository extends JpaRepository<CustomerEntity, String> {
 
-    boolean existsByCode(String code);
-    Optional<CustomerEntity> findByCode(String code);
+	  // 대소문자 무시 존재 체크
+	  boolean existsByCodeIgnoreCase(String code);
 
-    // ✅ 추가: 코드 대소문자 무시
-    Optional<CustomerEntity> findByCodeIgnoreCase(String code);
-    boolean existsByCodeIgnoreCase(String code);
-
-    @Query("""
-      select c from CustomerEntity c
-       where (:q is null
-              or lower(c.code) like lower(concat('%', :q, '%'))
-              or lower(c.name) like lower(concat('%', :q, '%'))
-              or lower(c.integrationType) like lower(concat('%', :q, '%')) )
-       order by c.code asc
-    """)
-    List<CustomerEntity> search(@Param("q") String q);
-
-    @Query("""
-      select c from CustomerEntity c
-       where (:q is null
-              or lower(c.code) like lower(concat('%', :q, '%'))
-              or lower(c.name) like lower(concat('%', :q, '%'))
-              or lower(c.integrationType) like lower(concat('%', :q, '%')) )
-    """)
-    Page<CustomerEntity> search(@Param("q") String q, Pageable pageable);
-
-    Optional<CustomerEntity> findByDomainIgnoreCase(String domain);
-    boolean existsByDomainIgnoreCase(String domain);
-}
+	  // 검색 (code/name 부분 일치)
+	  @Query("""
+	      select c from CustomerEntity c
+	      where lower(c.code) like lower(concat('%', :q, '%'))
+	         or lower(c.name) like lower(concat('%', :q, '%'))
+	      order by c.code asc
+	      """)
+	  List<CustomerEntity> search(@Param("q") String q);
+	}
