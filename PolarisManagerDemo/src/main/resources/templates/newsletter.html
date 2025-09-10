@@ -3,128 +3,94 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>광고 • 보안 콘솔</title>
+  <title>시큐뉴스 • 보안 콘솔</title>
 
-  <!-- 공통 스타일 -->
+  <!-- 공통 네비/레이아웃 -->
   <link rel="stylesheet" th:href="@{/css/nav.css}" href="/css/nav.css">
-  <!-- 페이지 전용 스타일 (그리드/카드/FAB/모달) -->
-  <link rel="stylesheet" th:href="@{/css/directads.css}" href="/css/directads.css">
+  <!-- 페이지 전용 스타일 -->
+  <link rel="stylesheet" th:href="@{/css/newsletter.css}" href="/css/newsletter.css">
 </head>
 <body>
   <div class="layout">
-    <!-- 사이드바: 활성 메뉴 = directads -->
-    <div th:replace="~{fragments/nav :: sidebar(active=${'directads'}, mode=${'admin'})}"></div>
+    <!-- 사이드바: 활성 메뉴 = newsletter -->
+    <div th:replace="~{fragments/nav :: sidebar(active=${'newsletter'}, mode=${'admin'})}"></div>
 
     <main class="content">
-      <!-- 상단 헤더 -->
-      <header class="page-head">
+      <!-- 헤더 -->
+      <header class="page-head" aria-describedby="todayText">
         <div>
-          <h1 class="h1">광고</h1>
-          <div class="muted today" id="todayText">-</div>
+          <h1 class="h1">시큐뉴스</h1>
+          <div class="muted" id="todayText">-</div>
         </div>
-        <div class="muted total">
-          <span id="totalBanner">BANNER 0개</span>
-          <span class="sep" aria-hidden="true">·</span>
-          <span id="totalBottom">BOTTOM 0개</span>
-        </div>
+        <!-- JS가 '총 N개' 전체 문구를 채웁니다 -->
+        <div class="muted" id="totalCount">총 0개</div>
       </header>
 
-      <!-- BANNER 섹션 -->
-      <section class="ad-section">
-        <h2 class="section-title">BANNER</h2>
-        <div id="gridBanner" class="cards cards--banner" aria-live="polite"></div>
-      </section>
-
-      <!-- BOTTOM 섹션 -->
-      <section class="ad-section">
-        <h2 class="section-title">BOTTOM</h2>
-        <div id="gridBottom" class="cards cards--bottom" aria-live="polite"></div>
+      <!-- 카드 그리드 -->
+      <section aria-labelledby="secTitle">
+        <h2 id="secTitle" class="sr-only" style="position:absolute;left:-9999px">뉴스 목록</h2>
+        <div id="grid" class="news-grid" aria-live="polite"></div>
       </section>
     </main>
   </div>
 
-  <!-- 플로팅 액션 버튼 (추가) -->
-  <button type="button" class="fab" id="fabAdd" aria-label="광고 추가">
+  <!-- 플로팅 액션 버튼: 새 뉴스 등록 -->
+  <button type="button" class="fab" id="fabAdd" aria-label="뉴스 등록">
     <span aria-hidden="true">＋</span>
   </button>
 
   <!-- 추가/수정 모달 -->
-  <div id="adModal" class="modal" aria-hidden="true">
-    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="adModalTitle">
+  <div id="newsModal" class="modal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="newsModalTitle">
       <header class="dialog-head">
-        <div class="head-left" style="display:flex;align-items:center;gap:12px">
-          <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3" y="3" width="18" height="18" rx="4" fill="#2563eb" opacity=".1"/>
-            <path d="M7 12h10M12 7v10" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <div>
-            <div id="adModalTitle" class="title">직광고</div>
-            <div class="subtitle">새 항목 추가</div>
-          </div>
+        <div>
+          <div id="newsModalTitle" class="title">시큐뉴스</div>
+          <div class="subtitle">새 항목 추가</div>
         </div>
         <button type="button" class="close" data-close aria-label="닫기">×</button>
       </header>
 
       <form id="modalForm" class="dialog-body">
-        <div class="two-cols">
-          <div class="field">
-            <label for="mAdType">유형</label>
-            <select id="mAdType" name="adType" required>
-              <option value="BANNER">BANNER</option>
-              <option value="BOTTOM">BOTTOM</option>
-              <option value="TOP">TOP</option>
-              <option value="INTERSTITIAL">INTERSTITIAL</option>
-              <option value="FLOATING_FAB">FLOATING_FAB</option>
-              <option value="INLINE">INLINE</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="mStatus">상태</label>
-            <select id="mStatus" name="status" required>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="PAUSED">PAUSED</option>
-              <option value="DRAFT">DRAFT</option>
-              <option value="ARCHIVED">ARCHIVED</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="two-cols">
-          <div class="field">
-            <label for="mAdvertiser">광고주명</label>
-            <input id="mAdvertiser" name="advertiserName" type="text" placeholder="InfoVine" required>
-          </div>
-
-          <div class="field">
-            <label for="mBackground">배경색</label>
-            <input id="mBackground" name="backgroundColor" type="text" placeholder="#FFFFFF">
-          </div>
+        <!-- 필드 -->
+        <div class="field">
+          <label for="mTitle">제목</label>
+          <input id="mTitle" name="title" type="text" placeholder="제목을 입력하세요" required>
         </div>
 
         <div class="field">
-          <label for="mImageUrl">이미지 URL</label>
-          <input id="mImageUrl" name="imageUrl" type="url" placeholder="https://..." required>
+          <label for="mCategory">카테고리</label>
+          <input id="mCategory" name="category" type="text" placeholder="예: 보안 이슈 / 취약점 / 업데이트">
         </div>
 
         <div class="field">
-          <label for="mTargetUrl">랜딩 URL</label>
-          <input id="mTargetUrl" name="targetUrl" type="url" placeholder="https://..." required>
+          <label for="mDate">날짜</label>
+          <input id="mDate" name="date" type="date">
         </div>
 
-        <div class="two-cols">
-          <div class="field">
-            <label for="mStart">시작일</label>
-            <input id="mStart" name="startAt" type="date">
-          </div>
-          <div class="field">
-            <label for="mEnd">종료일</label>
-            <input id="mEnd" name="endAt" type="date">
-          </div>
+        <div class="field">
+          <label for="mUrl">원문 URL</label>
+          <input id="mUrl" name="url" type="url" placeholder="https://...">
         </div>
 
-        <details class="advanced">
-          <summary>고급 옵션</summary>
-          <div class="two-cols">
-            <div class="field">
-              <label for="mPl
+        <div class="field">
+          <label for="mThumb">썸네일 URL</label>
+          <input id="mThumb" name="thumbnail" type="url" placeholder="https://...">
+        </div>
+
+        <!-- 액션 -->
+        <div class="actions">
+          <button type="button" id="btnDelete" class="btn danger" style="margin-right:auto;display:none">삭제</button>
+          <button type="button" class="btn ghost" data-close>취소</button>
+          <button type="submit" class="btn primary">저장</button>
+        </div>
+
+        <div id="modalMsg" class="hint" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 페이지 스크립트 -->
+  <script th:src="@{/js/newsletter.js}" src="/js/newsletter.js" defer></script>
+  <script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
+</body>
+</html>

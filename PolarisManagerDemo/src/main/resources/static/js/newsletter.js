@@ -30,6 +30,37 @@
     todayText.textContent = d.toLocaleDateString('ko-KR', opts).replace(/\.\s*/g, '-');
   }
 
+  // ===== 이미지 헬퍼 =====
+  // 플레이스홀더(SVG)
+  const PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600">
+       <defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+         <stop offset="0" stop-color="#e5eefc"/><stop offset="1" stop-color="#f7fafc"/>
+       </linearGradient></defs>
+       <rect width="100%" height="100%" fill="url(#g)"/>
+       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+             font-family="system-ui, sans-serif" font-size="28" fill="#6b7280">No Image</text>
+     </svg>`
+  );
+
+  // 썸네일 키 유연 매핑
+  function pickThumb(x) {
+    return x.thumbnail || x.thumb || x.image || x.img || '';
+  }
+
+  // 외부 이미지를 프록시로 감싸기 (서버에 /img-proxy 구현 필요)
+  function proxify(url) {
+    try {
+      if (!url) return url;
+      const u = new URL(url, location.origin);
+      // 같은 오리진이면 그대로 사용
+      if (u.origin === location.origin) return url;
+      return `/img-proxy?u=${encodeURIComponent(u.toString())}`;
+    } catch {
+      return url;
+    }
+  }
+
   // 목록/캐시
   let cache = []; // [{id,title,category,date,thumbnail,url}, ...]
 
@@ -63,15 +94,24 @@
       card.className   = 'news-card';
       card.tabIndex    = 0;                       // 접근성/키보드 포커스
       card.dataset.id  = x.id || '';
-      const img = esc(x.thumbnail || '');
+
+      const rawImg = pickThumb(x);
+      const imgUrl = rawImg ? proxify(rawImg) : PLACEHOLDER;
+
       const cat = esc(x.category || '');
       const date = esc(x.date || x.createTime || '');
       const title = esc(x.title || '');
       const url = esc(x.url || '');
 
       card.innerHTML = `
-        <div class="thumb-wrap">${img ? `<img src="${img}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div>
-        <div class="meta"><span class="cat">${cat}</span>${date ? ` <span class="dot">·</span> <span class="date">${date}</span>` : ''}</div>
+        <div class="thumb-wrap">
+          <img src="${imgUrl}" alt="" loading="lazy"
+               onerror="this.onerror=null; this.src='${PLACEHOLDER}'">
+        </div>
+        <div class="meta">
+          ${cat ? `<span class="cat">${cat}</span>` : ''}
+          ${date ? ` <span class="dot">·</span> <span class="date">${date}</span>` : ''}
+        </div>
         <h3 class="title">${title}</h3>
         <div class="actions">
           ${url ? `<a class="link" href="${url}" target="_blank" rel="noopener">원문 보기</a>` : '<span></span>'}
@@ -138,7 +178,7 @@
     tInput.value  = item.title || '';
     cInput.value  = item.category || '';
     uInput.value  = item.url || '';
-    thInput.value = item.thumbnail || '';
+    thInput.value = item.thumbnail || item.thumb || item.image || item.img || '';
     btnDelete.hidden = !item.id;
 
     setTimeout(() => tInput?.focus(), 0);
@@ -166,8 +206,9 @@
     if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
   });
 
-  // 카드 클릭 → 수정 모달
+  // 카드 클릭 → 수정 모달 (링크 클릭은 제외)
   grid?.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return; // 링크 클릭은 패스
     const card = e.target.closest('.news-card');
     if (!card) return;
     const id = card.dataset.id;
@@ -179,6 +220,7 @@
   // 키보드 접근: Enter로 열기
   grid?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
+    if (e.target.closest('a')) return;
     const card = e.target.closest('.news-card');
     if (!card) return;
     const id = card.dataset.id;

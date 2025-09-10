@@ -172,13 +172,20 @@
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     </dependency>
 
-    <!-- Lombok (하나만) -->
+    <!-- Lombok -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>1.18.32</version>
       <scope>provided</scope>
     </dependency>
+    
+    <!-- WEB Client -->
+    <dependency>
+ 		<groupId>org.springframework.boot</groupId>
+  		<artifactId>spring-boot-starter-webflux</artifactId>
+	</dependency>
+    
   </dependencies>
 
   <build>
@@ -187,8 +194,9 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-        	<excludeDevtools>false</excludeDevtools>
-      	</configuration>
+          <!-- devtools를 재패키징 JAR에 포함하려면 false(기본 true) -->
+          <excludeDevtools>false</excludeDevtools>
+        </configuration>
       </plugin>
     </plugins>
   </build>

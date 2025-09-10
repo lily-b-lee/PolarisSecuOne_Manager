@@ -3,19 +3,26 @@ package com.polarisoffice.secuone.api;
 
 import com.polarisoffice.secuone.repository.CustomerRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Controller
 public class HomeController {
+
+  private static final Pattern CODE_FROM_STRING =
+      Pattern.compile("(?:customerCode|tenantCode|code)=([A-Za-z0-9_-]+)");
 
   private final CustomerRepository customerRepo;
 
@@ -30,7 +37,8 @@ public class HomeController {
   /** 로그인 (공용). /admin/login, /customer/login은 기본 모드만 다르게 전달 */
   @GetMapping("/login")
   public String login(@RequestParam(value="next", required=false) String next, Model model) {
-    if (next != null && !next.isBlank()) model.addAttribute("next", next);
+    String safeNext = sanitizeNext(next); // 오픈 리다이렉트 방지
+    if (hasText(safeNext)) model.addAttribute("next", safeNext);
     model.addAttribute("showNav", false);
     // 템플릿에서 기본 모드 탭 선택에 사용할 값 (admin|customer)
     model.addAttribute("defaultMode", "admin");
@@ -39,7 +47,8 @@ public class HomeController {
 
   @GetMapping("/admin/login")
   public String adminLogin(@RequestParam(value="next", required=false) String next, Model model) {
-    if (next != null && !next.isBlank()) model.addAttribute("next", next);
+    String safeNext = sanitizeNext(next);
+    if (hasText(safeNext)) model.addAttribute("next", safeNext);
     model.addAttribute("showNav", false);
     model.addAttribute("defaultMode", "admin");
     return "login";
@@ -47,19 +56,33 @@ public class HomeController {
 
   @GetMapping("/customer/login")
   public String customerLogin(@RequestParam(value="next", required=false) String next, Model model) {
-    if (next != null && !next.isBlank()) model.addAttribute("next", next);
+    String safeNext = sanitizeNext(next);
+    if (hasText(safeNext)) model.addAttribute("next", safeNext);
     model.addAttribute("showNav", false);
     model.addAttribute("defaultMode", "customer");
     return "login";
   }
 
-  /** 관리자 회원가입 (별칭 포함) */
+  /**
+   * 관리자 회원가입 (별칭 포함)
+   * - 회원가입을 노출하지 않기로 한 정책이라면 404로 응답합니다.
+   *   노출하려면 아래 throw 라인을 제거하고 "admin_signup" 반환하세요.
+   */
   @GetMapping({"/admin/signup", "/admin_signup"})
-  public String adminSignup() { return "admin_signup"; }
+  public String adminSignup() {
+    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    // return "admin_signup";
+  }
 
-  /** 고객사 회원가입 (별칭 포함) */
+  /**
+   * 고객사 회원가입 (별칭 포함)
+   * - 회원가입 미노출 정책 시 404
+   */
   @GetMapping({"/customer/signup", "/customer_signup"})
-  public String customerSignup() { return "customer_signup"; }
+  public String customerSignup() {
+    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    // return "customer_signup";
+  }
 
   /** 구 주소 호환 */
   @GetMapping("/signup")
@@ -136,6 +159,19 @@ public class HomeController {
 
   private static boolean hasText(String s){ return s != null && !s.isBlank(); }
 
+  /** /login?next=... 오픈 리다이렉트 방지: 절대 URL/스킴/이중 슬래시 불허, 상대 경로만 허용 */
+  private static String sanitizeNext(String next) {
+    if (!hasText(next)) return null;
+    // 공백 제거
+    String n = next.trim();
+    // 절대 URL, 스킴, 프로토콜 상대, 이중 슬래시 시작, CR/LF 등 불허
+    if (n.startsWith("http://") || n.startsWith("https://") || n.startsWith("//")) return null;
+    if (n.contains("\r") || n.contains("\n")) return null;
+    // 상대경로만 허용
+    if (n.startsWith("/")) return n;
+    return null;
+  }
+
   /** 보고서 뷰용 고객사코드 결정 로직 (헤더/쿼리/JWT/도메인) */
   private String resolveCustomerCodeForView(HttpServletRequest req, String explicit) {
     if (hasText(explicit)) return explicit;
@@ -148,7 +184,7 @@ public class HomeController {
     if (hasText(q)) return q;
 
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth != null) {
+    if (auth != null && !(auth instanceof AnonymousAuthenticationToken)) {
       Map<String,Object> claims = claimsFromAuth(auth);
       Object v = claims.get("customerCode");
       if (v == null) v = claims.get("tenantCode");
@@ -161,10 +197,12 @@ public class HomeController {
       if (hasText(fromD)) return fromD;
     }
 
-    String host = Optional.ofNullable(req.getHeader("X-Customer-Domain"))
-        .orElseGet(() -> Optional.ofNullable(req.getHeader("X-Forwarded-Host")).orElse(req.getServerName()));
+    String host = headerFirst(req.getHeader("X-Customer-Domain"));
+    if (!hasText(host)) host = headerFirst(req.getHeader("X-Forwarded-Host"));
+    if (!hasText(host)) host = req.getServerName();
+
     if (hasText(host)) {
-      host = host.replaceFirst(":\\d+$", "");
+      host = normalizeHost(host);
       return customerRepo.findByDomainIgnoreCase(host)
           .map(c -> c.getCode())
           .orElse("mg");
@@ -190,7 +228,7 @@ public class HomeController {
       } catch (Exception ignored) { }
     }
     String s = String.valueOf(src);
-    var m = java.util.regex.Pattern.compile("(?:customerCode|tenantCode|code)=([A-Za-z0-9_-]+)").matcher(s);
+    var m = CODE_FROM_STRING.matcher(s);
     if (m.find()) return m.group(1);
     return null;
   }
@@ -221,5 +259,22 @@ public class HomeController {
     Object p = auth.getPrincipal();
     if (p instanceof Map<?,?> map) return (Map<String,Object>) map;
     return Collections.emptyMap();
+  }
+
+  /** 콤마 체인(프록시)에서 첫 호스트만 추출 */
+  private static String headerFirst(String headerVal) {
+    if (!hasText(headerVal)) return null;
+    int idx = headerVal.indexOf(',');
+    return (idx > -1) ? headerVal.substring(0, idx).trim() : headerVal.trim();
+  }
+
+  /** 호스트 정규화: 소문자, 포트 제거, 선행 www. 제거 */
+  private static String normalizeHost(String host) {
+    String h = host.toLowerCase(Locale.ROOT).trim();
+    // 포트 제거
+    h = h.replaceFirst(":\\d+$", "");
+    // 선행 www. 제거
+    if (h.startsWith("www.")) h = h.substring(4);
+    return h;
   }
 }

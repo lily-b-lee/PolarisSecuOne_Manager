@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8">
@@ -71,28 +71,29 @@
         <button type="button" class="close" data-close aria-label="닫기">×</button>
       </header>
 
+      <!-- action/method은 JS에서 가로채는 경우 생략 가능 -->
       <form id="noticeForm" class="dialog-body">
-        <input type="hidden" id="mId">
+        <input type="hidden" id="mId" name="id">
 
         <div class="field">
           <label for="mTitle">제목</label>
-          <input id="mTitle" name="mTitle" type="text" placeholder="제목을 입력하세요" required>
+          <input id="mTitle" name="title" type="text" placeholder="제목을 입력하세요" required>
         </div>
 
         <div class="field">
           <label for="mContent">내용</label>
-          <textarea id="mContent" name="mContent" rows="4" placeholder="내용을 입력하세요"></textarea>
+          <textarea id="mContent" name="content" rows="4" placeholder="내용을 입력하세요"></textarea>
         </div>
 
         <div class="field-3col">
           <div class="field">
             <label for="mAuthor">작성자</label>
-            <input id="mAuthor" name="mAuthor" type="text" placeholder="예: 관리자">
+            <input id="mAuthor" name="author" type="text" placeholder="예: 관리자">
           </div>
 
           <div class="field">
             <label for="mCategory">카테고리</label>
-            <select id="mCategory" name="mCategory">
+            <select id="mCategory" name="category">
               <option value="EVENT">이벤트</option>
               <option value="EMERGENCY">긴급보안공지</option>
               <option value="SERVICE_GUIDE">서비스 안내</option>
@@ -102,22 +103,25 @@
 
           <div class="field">
             <label for="mDate">날짜</label>
-            <input id="mDate" name="mDate" type="date">
+            <input id="mDate" name="date" type="date">
           </div>
         </div>
-		<div class="field" style="display:flex; gap:16px; align-items:center;">
-		  <label style="display:flex; gap:6px; align-items:center;">
-		    <input type="checkbox" id="mSendPush">
-		    <span>저장 후 푸시 발송</span>
-		  </label>
-		  <label style="display:flex; gap:6px; align-items:center; opacity:.9">
-		    <input type="checkbox" id="mPushTest">
-		    <span>테스트 모드(테스트 채널/대상)</span>
-		  </label>
-		</div>
+
+        <div class="field" style="display:flex; gap:16px; align-items:center;">
+          <!-- 레이블로 감싸 클릭 영역 확대 -->
+          <label style="display:flex; gap:6px; align-items:center;">
+            <input type="checkbox" id="mSendPush" name="sendPush">
+            <span>저장 후 푸시 발송</span>
+          </label>
+          <label style="display:flex; gap:6px; align-items:center; opacity:.9">
+            <input type="checkbox" id="mPushTest" name="pushTest">
+            <span>테스트 모드(테스트 채널/대상)</span>
+          </label>
+        </div>
+
         <div class="actions">
           <button type="button" id="btnDelete" class="btn ghost danger" style="margin-right:auto;display:none">삭제</button>
-          <button type="button" class="btn ghost" data-close>취소</button>
+          <button type="button" class="btn ghost" data-close aria-label="취소">취소</button>
           <button type="submit" class="btn primary" id="btnSave">발행하기</button>
         </div>
 
@@ -127,8 +131,7 @@
   </div>
 
   <!-- JS -->
-  <script th:src="@{/js/notice.js}" src="/js/notice.js"></script>
-<script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
-
+  <script th:src="@{/js/notice.js}" src="/js/notice.js" defer></script>
+  <script th:src="@{/js/nav.js}" src="/js/nav.js" defer></script>
 </body>
 </html>
