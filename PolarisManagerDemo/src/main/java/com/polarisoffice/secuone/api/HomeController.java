@@ -17,17 +17,53 @@ import java.util.*;
 @Controller
 public class HomeController {
 
-  // ✅ 주입 누락되었던 부분
   private final CustomerRepository customerRepo;
 
-  // ✅ 생성자 주입 (롬복 없이)
   public HomeController(CustomerRepository customerRepo) {
     this.customerRepo = customerRepo;
   }
+
+  /** 루트 → 로그인 */
   @GetMapping("/")
-  public String home() {
-    return "redirect:/login";
+  public String home() { return "redirect:/login"; }
+
+  /** 로그인 (공용). /admin/login, /customer/login은 기본 모드만 다르게 전달 */
+  @GetMapping("/login")
+  public String login(@RequestParam(value="next", required=false) String next, Model model) {
+    if (next != null && !next.isBlank()) model.addAttribute("next", next);
+    model.addAttribute("showNav", false);
+    // 템플릿에서 기본 모드 탭 선택에 사용할 값 (admin|customer)
+    model.addAttribute("defaultMode", "admin");
+    return "login";
   }
+
+  @GetMapping("/admin/login")
+  public String adminLogin(@RequestParam(value="next", required=false) String next, Model model) {
+    if (next != null && !next.isBlank()) model.addAttribute("next", next);
+    model.addAttribute("showNav", false);
+    model.addAttribute("defaultMode", "admin");
+    return "login";
+  }
+
+  @GetMapping("/customer/login")
+  public String customerLogin(@RequestParam(value="next", required=false) String next, Model model) {
+    if (next != null && !next.isBlank()) model.addAttribute("next", next);
+    model.addAttribute("showNav", false);
+    model.addAttribute("defaultMode", "customer");
+    return "login";
+  }
+
+  /** 관리자 회원가입 (별칭 포함) */
+  @GetMapping({"/admin/signup", "/admin_signup"})
+  public String adminSignup() { return "admin_signup"; }
+
+  /** 고객사 회원가입 (별칭 포함) */
+  @GetMapping({"/customer/signup", "/customer_signup"})
+  public String customerSignup() { return "customer_signup"; }
+
+  /** 구 주소 호환 */
+  @GetMapping("/signup")
+  public String legacySignup() { return "redirect:/admin/signup"; }
 
   /** 관리자/공용 오버뷰 */
   @GetMapping("/overview")
@@ -43,32 +79,28 @@ public class HomeController {
     return "manager_overview";
   }
 
-  // ====== 리포트 진입 뷰 ======
+  /** 리포트 진입 뷰 */
   @GetMapping("/manager/reports")
   public String managerReports(HttpServletRequest req,
                                @RequestParam(value="customerCode", required=false) String explicit,
                                Model model, Locale locale) {
     setToday(model, locale);
-    // 뷰에서 <meta name="customer-code">로 사용
     String cc = resolveCustomerCodeForView(req, explicit);
     model.addAttribute("customerCode", cc);
     return "manager_report";
   }
 
-  // ====== 직광고 뷰 ======
-
-  /** 직광고 대시보드 (관리자) */
+  /** 직광고 뷰 */
   @GetMapping("/directads")
   public String directads(Model model, Locale locale) {
     setToday(model, locale);
-    return "directads";            // templates/directads.html
+    return "directads";
   }
 
-  /** 직광고 대시보드 (고객사 포털, 필요 시 사용) */
   @GetMapping("/manager/directads")
   public String managerDirectads(Model model, Locale locale) {
     setToday(model, locale);
-    return "manager_directads";    // templates/manager_directads.html (선택)
+    return "manager_directads";
   }
 
   // ---- 기존 라우팅들 ----
@@ -82,7 +114,7 @@ public class HomeController {
   public String customerDetail() { return "customer_detail"; }
 
   @GetMapping("/customer_detail")
-  public String customerDetailQuery(@RequestParam(required = false) String id, Model model) {
+  public String customerDetailQuery(@RequestParam(required=false) String id, Model model) {
     model.addAttribute("customerId", id);
     return "customer_detail";
   }
@@ -92,17 +124,6 @@ public class HomeController {
     model.addAttribute("customerId", id);
     return "customer_detail";
   }
-
-  /** 로그인 페이지 */
-  @GetMapping("/login")
-  public String login(@RequestParam(value = "next", required = false) String next, Model model) {
-    if (next != null && !next.isBlank()) model.addAttribute("next", next);
-    model.addAttribute("showNav", false);
-    return "login";
-  }
-
-  @GetMapping("/signup")           public String signup() { return "signup"; }
-  @GetMapping("/forgot-password")  public String forgotPassword() { return "forgot_password"; }
 
   // ====== 내부 유틸 ======
   private void setToday(Model model, Locale locale) {
@@ -140,14 +161,13 @@ public class HomeController {
       if (hasText(fromD)) return fromD;
     }
 
-    // ✅ 도메인 → 고객사코드 (여기서 customerRepo 사용)
     String host = Optional.ofNullable(req.getHeader("X-Customer-Domain"))
         .orElseGet(() -> Optional.ofNullable(req.getHeader("X-Forwarded-Host")).orElse(req.getServerName()));
     if (hasText(host)) {
       host = host.replaceFirst(":\\d+$", "");
       return customerRepo.findByDomainIgnoreCase(host)
           .map(c -> c.getCode())
-          .orElse("mg"); // 실패 시 dev 기본값
+          .orElse("mg");
     }
     return "mg";
   }
@@ -188,7 +208,7 @@ public class HomeController {
     } catch (Exception ignored) {}
 
     try {
-      var mTok = auth.getClass().getMethod("getToken");      // JwtAuthenticationToken#getToken()
+      var mTok = auth.getClass().getMethod("getToken"); // JwtAuthenticationToken#getToken()
       Object jwt = mTok.invoke(auth);
       if (jwt != null) {
         var mClaims = jwt.getClass().getMethod("getClaims"); // Jwt#getClaims()

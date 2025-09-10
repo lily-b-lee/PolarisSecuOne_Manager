@@ -3,61 +3,153 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <!-- 백엔드가 서브패스로 뒤집힐 수도 있으니 BASE 힌트 -->
   <meta name="app-base" content="/" />
   <title>로그인</title>
   <link rel="stylesheet" href="/css/app.css">
   <style>
-    .wrap{max-width:480px;margin:80px auto;padding:24px}
-    h1{margin:0 0 16px;font-size:22px}
-    .card{border:1px solid #ddd;border-radius:10px;padding:20px}
-    .row{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;margin:10px 0}
-    .row input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px}
-    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-    .error{color:#c00;font-size:12px;margin-top:6px;min-height:18px}
-    .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer}
-    .btn.primary{background:#111827;color:#fff;border-color:#111827}
-    .seg{display:flex;border:1px solid #d1d5db;border-radius:10px;overflow:hidden;margin:12px 0}
-    .seg-btn{flex:1;text-align:center;padding:10px 12px;background:#f9fafb;cursor:pointer;border-right:1px solid #e5e7eb;user-select:none}
-    .seg-btn:last-child{border-right:none}
-    .seg-btn.active{background:#111827;color:#fff}
-    .input-with-icon{display:flex;align-items:center;gap:8px}
-    .input-with-icon button{border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
+    :root{
+      --bg: #0f172a;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --primary:#111827;
+      --primary-fg:#fff;
+      --ring:#4f46e5;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, #4f46e51a, transparent 60%),
+        radial-gradient(1000px 600px at 120% 10%, #06b6d41a, transparent 60%),
+        linear-gradient(180deg,#0b1020,#0f172a);
+      min-height:100dvh;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Apple SD Gothic Neo, 'Malgun Gothic', sans-serif;
+      display:grid;
+      place-items:center;
+      padding:40px 16px;
+    }
+    .wrap{width:100%;max-width:520px}
+    h1{margin:0 0 18px;color:#fff;font-weight:700;letter-spacing:.2px}
+
+    .card{
+      background:var(--card);
+      border:1px solid #ffffff26;
+      border-radius:16px;
+      padding:24px;
+      box-shadow:
+        0 10px 30px rgba(2,6,23,.25),
+        inset 0 1px 0 #ffffff90;
+    }
+
+    .seg{
+      display:flex; gap:0; border-radius:12px; overflow:hidden;
+      background:#1118271a; border:1px solid #33415560; margin:12px 0 16px;
+      backdrop-filter: blur(6px);
+    }
+    .seg-btn{
+      flex:1; text-align:center; padding:12px 14px; cursor:pointer;
+      color:#e5e7eb; user-select:none; transition:all .15s ease;
+    }
+    .seg-btn.active{
+      background:linear-gradient(180deg,#1f2937,#111827);
+      color:#fff; box-shadow: inset 0 0 0 1px #ffffff20;
+    }
+
+    .row{
+      display:grid; grid-template-columns:120px 1fr; gap:12px; align-items:center; margin:12px 0;
+    }
+    .row label{color:#334155; font-weight:600}
+    input{
+      width:100%;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    input:focus{
+      border-color:var(--ring);
+      box-shadow:0 0 0 4px #4f46e51f;
+    }
+
+    .input-with-icon{display:flex; align-items:center; gap:8px}
+    .icon-btn{
+      display:inline-grid; place-items:center;
+      width:44px; height:44px;
+      border:1px solid var(--border);
+      background:#fff; border-radius:10px; cursor:pointer;
+      transition:border-color .15s, box-shadow .15s, background .15s;
+    }
+    .icon-btn:hover{background:#fafafa}
+    .icon-btn:focus{outline:none; border-color:var(--ring); box-shadow:0 0 0 4px #4f46e51f}
+    .icon-btn svg{width:22px; height:22px; stroke:#111827}
+
+    /* 아이콘 토글: data-show="false" => 눈 아이콘, "true" => 눈가림 아이콘 */
+    .icon-btn .eye, .icon-btn .eye-off{display:none}
+    .icon-btn[data-show="false"] .eye{display:block}
+    .icon-btn[data-show="true"] .eye-off{display:block}
+
+    .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:16px}
+    .btn{
+      display:inline-flex; align-items:center; gap:6px; padding:10px 14px;
+      border:1px solid #cbd5e1; border-radius:10px; background:#fff; color:#111827; cursor:pointer;
+      text-decoration:none; font-weight:600;
+    }
+    .btn.primary{
+      background:linear-gradient(180deg,#111827,#0b1220);
+      color:var(--primary-fg); border-color:#0b1220;
+      box-shadow: 0 8px 18px rgba(17,24,39,.25);
+    }
+    .btn:disabled{opacity:.7; cursor:not-allowed}
+    .error{color:#c1121f; font-size:12px; margin-top:8px; min-height:18px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>로그인</h1>
 
-    <!-- 관리자 / 고객사 탭 -->
     <div class="seg" role="tablist" aria-label="Login Mode">
       <div id="tabAdmin" class="seg-btn active" role="tab" data-mode="admin" aria-selected="true">관리자 로그인</div>
       <div id="tabCustomer" class="seg-btn" role="tab" data-mode="customer" aria-selected="false">고객사 로그인</div>
     </div>
 
     <div class="card">
-      <form id="loginForm">
+      <form id="loginForm" novalidate>
         <div class="row">
-          <label for="username">아이디</label>
-          <input id="username" name="username" autocomplete="username" autofocus>
+          <label id="usernameLabel" for="username">아이디</label>
+          <input id="username" name="username" autocomplete="username" placeholder="아이디" autofocus>
         </div>
 
         <div class="row">
           <label for="password">비밀번호</label>
           <div class="input-with-icon">
-            <input id="password" name="password" type="password" autocomplete="current-password">
-            <button type="button" id="pwToggle" aria-label="비밀번호 보기/숨기기">보기</button>
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="비밀번호">
+            <button type="button" id="pwToggle" class="icon-btn" aria-label="비밀번호 보기" aria-pressed="false" data-show="false" title="비밀번호 보기">
+              <!-- 눈 아이콘 -->
+              <svg class="eye" viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
+                <circle cx="12" cy="12" r="3.5"/>
+              </svg>
+              <!-- 눈가림 아이콘 -->
+              <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+                <path d="M3 3l18 18M10.6 10.6A3.5 3.5 0 0 0 8.5 14M20.9 15.5C22.1 14.1 23 12 23 12s-4-7-11-7a12 12 0 0 0-4 .7M4 8.5A17 17 0 0 0 1 12s4 7 11 7a12 12 0 0 0 5.5-1.3"/>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <!-- 고객사 로그인용 추가 입력 -->
         <div class="row" id="customerCodeRow" style="display:none">
           <label for="customerCode">고객사 코드</label>
           <input id="customerCode" name="customerCode" placeholder="예) mg">
         </div>
 
         <div class="actions">
-          <a class="btn" id="signupBtn" href="/signup">회원가입</a>
+          <span id="signupWrap">
+            <a class="btn" id="signupBtn" href="/admin/signup">회원가입</a>
+          </span>
           <button type="submit" class="btn primary" id="loginBtn">로그인</button>
         </div>
       </form>

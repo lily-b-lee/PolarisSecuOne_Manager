@@ -2,11 +2,9 @@
 (() => {
   const $  = (s, p=document) => p.querySelector(s);
 
-  // 앱 베이스
   const BASE = (document.querySelector('meta[name="app-base"]')?.content || '/')
     .replace(/\/+$/, '') || '';
 
-  // 모드별 로그인 엔드포인트
   const ADMIN_LOGIN_URL    = `${BASE}/api/admin/auth/login`.replace(/\/+/g,'/');
   const CUSTOMER_LOGIN_URL = `${BASE}/api/customer/auth/login`.replace(/\/+/g,'/');
 
@@ -18,21 +16,45 @@
   const setBusy = (b) => {
     BUSY = b;
     const btn = $('#loginBtn');
-    if (btn) { btn.disabled = b; btn.textContent = b ? '로그인 중…' : 'LOGIN'; }
+    if (btn) { btn.disabled = b; btn.textContent = b ? '로그인 중…' : '로그인'; }
   };
 
   function renderMode() {
     const isCustomer = (MODE === 'customer');
+
     $('#tabAdmin')?.classList.toggle('active', !isCustomer);
     $('#tabAdmin')?.setAttribute('aria-selected', (!isCustomer).toString());
     $('#tabCustomer')?.classList.toggle('active', isCustomer);
     $('#tabCustomer')?.setAttribute('aria-selected', isCustomer.toString());
-    const ccRow = $('#customerCodeRow');
-    if (ccRow) ccRow.style.display = isCustomer ? '' : 'none';
+
+    $('#customerCodeRow')?.style && ($('#customerCodeRow').style.display = isCustomer ? '' : 'none');
+
+    const label = $('#usernameLabel');
+    const user = $('#username');
+    if (label) label.textContent = isCustomer ? '이메일' : '아이디';
+    if (user) {
+      user.placeholder = isCustomer ? '이메일 주소' : '아이디';
+      user.type = isCustomer ? 'email' : 'text';
+      user.autocomplete = isCustomer ? 'email' : 'username';
+    }
+
+    // 고객사 탭에서는 회원가입 숨김
+    const signupWrap = $('#signupWrap');
+    if (signupWrap) signupWrap.style.display = isCustomer ? 'none' : '';
+
+    // 비밀번호 표시 상태 초기화
+    const pw = $('#password');
+    const toggle = $('#pwToggle');
+    if (pw && toggle) {
+      pw.type = 'password';
+      toggle.setAttribute('data-show','false');
+      toggle.setAttribute('aria-pressed','false');
+      toggle.setAttribute('title','비밀번호 보기');
+    }
+
     showErr('');
   }
 
-  // 탭: 이벤트 위임
   function bindTabs() {
     const seg = document.querySelector('.seg');
     if (!seg || seg.dataset.bound) return;
@@ -42,20 +64,23 @@
       if (!btn) return;
       const mode = btn.getAttribute('data-mode');
       if (!mode) return;
-      MODE = mode;         // 'admin' | 'customer'
+      MODE = mode; // 'admin' | 'customer'
       renderMode();
     }, true);
   }
 
-  // 비밀번호 보기 토글
   function bindPwToggle() {
     const btn = $('#pwToggle');
-    if (!btn || btn.dataset.bound) return;
+    const pw  = $('#password');
+    if (!btn || !pw || btn.dataset.bound) return;
     btn.dataset.bound = '1';
     btn.addEventListener('click', () => {
-      const $pw = $('#password');
-      if (!$pw) return;
-      $pw.type = ($pw.type === 'password') ? 'text' : 'password';
+      const showing = btn.getAttribute('data-show') === 'true';
+      const next = !showing;
+      pw.type = next ? 'text' : 'password';
+      btn.setAttribute('data-show', String(next));
+      btn.setAttribute('aria-pressed', String(next));
+      btn.setAttribute('title', next ? '비밀번호 숨기기' : '비밀번호 보기');
     });
   }
 
@@ -73,6 +98,8 @@
     return { res, data, text, ct };
   }
 
+  const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
   async function doLogin(e) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (BUSY) return;
@@ -83,7 +110,11 @@
     const customerCode = ($('#customerCode')?.value || '').trim();
 
     if (!username || !password) { showErr('아이디/비밀번호를 입력해 주세요.'); return; }
-    if (MODE === 'customer' && !customerCode) { showErr('고객사 코드를 입력해 주세요.'); return; }
+
+    if (MODE === 'customer') {
+      if (!isEmail(username)) { showErr('이메일 주소 형식이 올바르지 않습니다.'); return; }
+      if (!customerCode)      { showErr('고객사 코드를 입력해 주세요.'); return; }
+    }
 
     const url = (MODE === 'customer') ? CUSTOMER_LOGIN_URL : ADMIN_LOGIN_URL;
     const payload = (MODE === 'customer')
@@ -112,13 +143,11 @@
         return;
       }
 
-      // 응답 통일: { user, token?, type? } or { id, username, role }
       const typeGuess  = (MODE === 'customer') ? 'customer' : 'admin';
       const type  = (data?.type || typeGuess);
       const user  = data?.user || data;
       const token = data?.token || null;
 
-      // 저장
       try {
         localStorage.setItem('auth_type', type);
         localStorage.setItem('auth_user', JSON.stringify(user));
@@ -153,7 +182,7 @@
     $('#loginForm')?.addEventListener('submit', doLogin);
     $('#username')?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') doLogin(e); });
     $('#password')?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') doLogin(e); });
-    $('#signupBtn')?.addEventListener('click', () => { location.href = '/signup'; });
+    $('#signupBtn')?.setAttribute('href', '/admin/signup'); // 관리자만 노출
   }
 
   function init() {
@@ -161,6 +190,10 @@
     bindPwToggle();
     bindForm();
     renderMode();
+
+    // URL ?tab=customer 로 바로 고객사 탭 열기 지원
+    const tab = new URLSearchParams(location.search).get('tab');
+    if (tab === 'customer') { MODE = 'customer'; renderMode(); }
   }
 
   if (document.readyState === 'loading') {
