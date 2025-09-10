@@ -78,9 +78,9 @@ public class CustomerContactService {
     // 3) 그래도 없으면 새로 생성
  // 3) 그래도 없으면 새로 생성
     if (e == null) {
-      CustomerEntity customer = customers.findByCode(customerCode)
-          .orElseThrow(() ->
-              new IllegalArgumentException("Invalid customerCode: " + customerCode));
+    	CustomerEntity customer = java.util.Optional
+    		    .ofNullable(customers.findByCode(customerCode))
+    		    .orElseThrow(() -> new IllegalArgumentException("Invalid customerCode: " + customerCode));
 
       e = new CustomerContactEntity();
       e.setCustomer(customer);
