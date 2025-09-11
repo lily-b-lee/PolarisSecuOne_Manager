@@ -78,8 +78,6 @@ public class CustomerService {
     r.rsPercent = e.getRsPercent();
     r.cpiValue = e.getCpiValue();
     r.note = e.getNote();
-    r.createdAt = e.getCreatedAt();
-    r.updatedAt = e.getUpdatedAt();
     return r;
   }
 

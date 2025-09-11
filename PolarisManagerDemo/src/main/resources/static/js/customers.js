@@ -1,4 +1,4 @@
-// /static/js/customers.js  (drop-in)
+// /static/js/customers.js  (drop-in, CPI=원 단위 / input id="value")
 (() => {
   console.log('[customers] script loaded');
 
@@ -15,8 +15,9 @@
   };
 
   // ---- utils
-  const nz = (v, d) => (v === null || v === undefined ? d : v);
+  const nz  = (v, d) => (v === null || v === undefined ? d : v);
   const pct = (v) => (v === null || v === undefined || v === '' ? '-' : `${Number(v).toFixed(2)}%`);
+  const won = (v) => (v === null || v === undefined || v === '' ? '-' : `${Number(v).toLocaleString('ko-KR')}원`);
   const num = (v) => (v === null || v === undefined || v === '' ? '-' : String(v));
   const showErr = (m='') => { const el = $('#formErr'); if (el) el.textContent = m; };
 
@@ -36,12 +37,16 @@
 
   // ---- form helpers
   function fillForm(c) {
-    $('#custId').value   = nz(c?.id ?? c?.code, '');
-    $('#code').value     = nz(c?.code, '');
-    $('#name').value     = nz(c?.name, '');
-    $('#cpiRate').value  = nz(c?.cpiValue, 0);   // 서버 키에 맞춰 채움
-    $('#rsRate').value   = nz(c?.rsPercent, 0);  // 서버 키에 맞춰 채움
-    $('#note').value     = nz(c?.note, '');
+    // 서버 응답 호환: cpiValue(원), rsPercent(%) 우선. 없으면 cpiRate/rsRate 수용.
+    const cpi = c ? (c.cpiValue ?? c.cpiRate) : null;
+    const rs  = c ? (c.rsPercent ?? c.rsRate) : null;
+
+    $('#custId').value = nz(c?.id ?? c?.code, '');
+    $('#code').value   = nz(c?.code, '');
+    $('#name').value   = nz(c?.name, '');
+    $('#value').value  = nz(cpi, 0);        // 변경: #cpiRate -> #value
+    $('#rsRate').value = nz(rs, 0);
+    $('#note').value   = nz(c?.note, '');
   }
   function resetForm(){ fillForm(null); state.editingId = null; }
 
@@ -94,13 +99,16 @@
     }
     const frag = document.createDocumentFragment();
     rows.forEach(c => {
-      const id = c.code ?? c.id ?? c.customerId;
+      const id  = c.code ?? c.id ?? c.customerId;
+      const cpi = c.cpiValue ?? c.cpiRate;     // 원 단위
+      const rs  = c.rsPercent ?? c.rsRate;     // 퍼센트
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${c.code || '-'}</td>
         <td>${c.name || '-'}</td>
-        <td class="num">${pct(c.cpiValue)}</td>
-        <td class="num">${pct(c.rsPercent)}</td>
+        <td class="num">${won(cpi)}</td>      <!-- 변경: 퍼센트 -> 원 표시 -->
+        <td class="num">${pct(rs)}</td>
         <td>
           <div class="quick">
             <button class="btn" data-act="detail" data-id="${id}" type="button">상세</button>
@@ -148,31 +156,46 @@
   // ---- save
   async function onSave() {
     showErr('');
-    const id = $('#custId').value || null;
-    const code = ($('#code').value || '').trim();
-    const name = ($('#name').value || '').trim();
-    const cpi = $('#cpiRate').value ? Number($('#cpiRate').value) : null;
-    const rs  = $('#rsRate').value  ? Number($('#rsRate').value)  : null;
-    const note = ($('#note').value || '').trim();
+    const id    = $('#custId').value || null;
+    const code  = ($('#code').value || '').trim();
+    const name  = ($('#name').value || '').trim();
+    const value = $('#value').value ? Number($('#value').value) : null;  // 변경: #cpiRate -> #value
+    const rs    = $('#rsRate').value ? Number($('#rsRate').value) : null;
+    const note  = ($('#note').value || '').trim();
 
     if (!id && !code) return showErr('회사 코드를 입력하세요.');
-    if (!name) return showErr('회사명을 입력하세요.');
-    // 간단 검증 (필요시 조정)
-    if (cpi != null && (isNaN(cpi) || cpi < 0 || cpi > 100)) return showErr('CPI %는 0~100 사이여야 합니다.');
-    if (rs  != null && (isNaN(rs)  || rs  < 0 || rs  > 100)) return showErr('RS %는 0~100 사이여야 합니다.');
+    if (!name)        return showErr('회사명을 입력하세요.');
 
-    // ✅ 서버 DTO 필드명에 맞춰 보냄
-    const payload = {
-      ...(id ? {} : { code }),
+    // 검증: CPI 금액(원) 정수/0이상, RS 0~100
+    if (value != null && (isNaN(value) || value < 0 || !Number.isInteger(value))) {
+      return showErr('CPI 금액은 0 이상의 정수여야 합니다.');
+    }
+    if (rs != null && (isNaN(rs) || rs < 0 || rs > 100)) {
+      return showErr('RS %는 0~100 사이여야 합니다.');
+    }
+
+    // 서버 페이로드 (신/구 키 모두 전송하여 양쪽 호환)
+    const base = {
       name,
-      cpiValue: cpi,      // <- was cpiRate
-      rsPercent: rs,      // <- was rsRate
-      note
+      note,
+      integrationType: 'GENERIC', // 기본값 방어
+    };
+    if (!id) base.code = code;
+
+    const payload = {
+      ...base,
+      // 신 키(백엔드 DTO: cpiRate/rsRate)
+      cpiRate: value,
+      rsRate : rs,
+      // 구 키(혹시 다른 엔드포인트가 기대한다면)
+      cpiValue: value,
+      rsPercent: rs,
     };
 
     try {
-      if (id) await update(id, payload);
-      else    await create(payload);
+      let res;
+      if (id) res = await update(id, payload);
+      else    res = await create(payload);
 
       closeModal(); resetForm(); $('#code').disabled = false; await refresh();
     } catch (e) {

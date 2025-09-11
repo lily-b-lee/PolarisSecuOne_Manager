@@ -61,30 +61,23 @@ public class AdminCustomerController {
   }
 
   /** 생성 */
-  @PostMapping(consumes = "application/json", produces = "application/json")
+  @PostMapping
   public ResponseEntity<?> create(@Valid @RequestBody Customers.CreateReq in) {
-    String code = (in.getCode() == null ? "" : in.getCode().trim()).toLowerCase();
-    if (code.isBlank()) {
-      return ResponseEntity.badRequest().body(Map.of("message", "회사 코드는 필수입니다."));
-    }
-    if (repo.existsByCodeIgnoreCase(code)) {
-      return ResponseEntity.status(409).body(Map.of(
-          "message", "이미 존재하는 코드입니다.", "code", code
-      ));
-    }
-
-    var c = new CustomerEntity();
-    c.setCode(code);
-    c.setName(in.getName());
-    c.setIntegrationType(in.getIntegrationType());
-    if (in.getRsPercent() != null) c.setRsPercent(in.getRsPercent());
-    if (in.getCpiValue()  != null) c.setCpiValue(in.getCpiValue());
-    c.setNote(in.getNote());
-
-    c = repo.save(c);
-    return ResponseEntity
-        .created(URI.create("/api/admin/customers/" + c.getCode()))
-        .body(toRes(c));
+      String code = in.getCode().trim().toLowerCase();
+      if (repo.existsByCode(code)) {
+          return ResponseEntity.status(409).body(Map.of("message", "이미 존재하는 코드입니다."));
+      }
+      var c = new CustomerEntity();
+      c.setCode(code);
+      c.setName(in.getName());
+      c.setIntegrationType(
+          (in.getIntegrationType()==null || in.getIntegrationType().isBlank())
+              ? "GENERIC" : in.getIntegrationType()
+      );
+      if (in.rsRate!=null) c.setRsPercent(in.rsRate);
+      if (in.cpiRate!=null)  c.setCpiValue(in.cpiRate);
+      c.setNote(in.getNote());
+      return ResponseEntity.ok(toRes(repo.save(c)));
   }
 
   /** 수정(부분 업데이트) — PK=code */
@@ -96,8 +89,8 @@ public class AdminCustomerController {
 
     if (in.getName()            != null) c.setName(in.getName());
     if (in.getIntegrationType() != null) c.setIntegrationType(in.getIntegrationType());
-    if (in.getRsPercent()       != null) c.setRsPercent(in.getRsPercent());
-    if (in.getCpiValue()        != null) c.setCpiValue(in.getCpiValue());
+    if (in.rsRate       != null) c.setRsPercent(in.rsRate);
+    if (in.cpiRate        != null) c.setCpiValue(in.cpiRate);
     if (in.getNote()            != null) c.setNote(in.getNote());
 
     c = repo.save(c);

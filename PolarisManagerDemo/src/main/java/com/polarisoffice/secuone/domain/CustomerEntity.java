@@ -2,122 +2,93 @@
 package com.polarisoffice.secuone.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
-import java.time.Instant;
 
 @Entity
-@Table(name = "customers", indexes = {
-  @Index(name = "uk_customers_domain", columnList = "domain", unique = true)
-})
-public class CustomerEntity {
-  @Id
-  @Column(nullable = false, length = 50)
-  private String code; // ✅ PK = String
+@Table(name = "customers")
+@Getter @Setter
+public class CustomerEntity extends BaseTimeEntity {
 
-  @Column(nullable = false, length = 120)
+  @Id
+  @Column(name = "code", length = 64, nullable = false, updatable = false)
+  private String code;
+
+  @Column(name = "name", length = 255, nullable = false)
   private String name;
 
-  @Column(length = 190, unique = true)
+  @Column(name = "domain", length = 255)
   private String domain;
 
-  @Column(length = 64)
-  private String integrationType;
+  @Column(name = "integration_type", length = 64)
+  private String integrationType;   // 예: GENERIC
 
-  @Column(precision = 10, scale = 2)
+  @Column(name = "rs_percent", precision = 10, scale = 2)
   private BigDecimal rsPercent;
 
-  @Column(precision = 12, scale = 2)
+  @Column(name = "cpi_value", precision = 10, scale = 2)
   private BigDecimal cpiValue;
 
-  @Column(length = 2000)
+  @Column(name = "note", length = 1000)
   private String note;
 
-  @Column(nullable = false, updatable = false)
-  private Instant createdAt;
-
-  @Column(nullable = false)
-  private Instant updatedAt;
-
-  @PrePersist
-  public void prePersist() { /* code/domain normalize; set timestamps */ }
-
-  @PreUpdate
-  public void preUpdate() { /* code/domain normalize; set updatedAt */ }
-
   public String getCode() {
-    return code;
+	return code;
   }
 
   public void setCode(String code) {
-    this.code = code;
+	this.code = code;
   }
 
   public String getName() {
-    return name;
+	return name;
   }
 
   public void setName(String name) {
-    this.name = name;
+	this.name = name;
   }
 
   public String getDomain() {
-    return domain;
+	return domain;
   }
 
   public void setDomain(String domain) {
-    this.domain = domain;
+	this.domain = domain;
   }
 
   public String getIntegrationType() {
-    return integrationType;
+	return integrationType;
   }
 
   public void setIntegrationType(String integrationType) {
-    this.integrationType = integrationType;
+	this.integrationType = integrationType;
   }
 
   public BigDecimal getRsPercent() {
-    return rsPercent;
+	return rsPercent;
   }
 
   public void setRsPercent(BigDecimal rsPercent) {
-    this.rsPercent = rsPercent;
+	this.rsPercent = rsPercent;
   }
 
   public BigDecimal getCpiValue() {
-    return cpiValue;
+	return cpiValue;
   }
 
   public void setCpiValue(BigDecimal cpiValue) {
-    this.cpiValue = cpiValue;
+	this.cpiValue = cpiValue;
   }
 
   public String getNote() {
-    return note;
+	return note;
   }
 
   public void setNote(String note) {
-    this.note = note;
+	this.note = note;
   }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public Instant getUpdatedAt() {
-    return updatedAt;
-  }
-
-  public void setUpdatedAt(Instant updatedAt) {
-    this.updatedAt = updatedAt;
-  }
-
-  // getters/setters ...
   
   
 }
-

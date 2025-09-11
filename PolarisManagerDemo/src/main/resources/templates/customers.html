@@ -51,7 +51,7 @@
               <tr>
                 <th>코드</th>
                 <th>회사명</th>
-                <th class="num">CPI%</th>
+                <th class="num">CPI(원)</th>  <!-- 변경: CPI% -> CPI(원) -->
                 <th class="num">RS%</th>
                 <th>작업</th>
               </tr>
@@ -85,8 +85,9 @@
           <label for="name">회사명</label>
           <input id="name" placeholder="예: MG 주식회사">
 
-          <label for="cpiRate">CPI %</label>
-          <input id="cpiRate" type="number" step="0.01" min="0" max="100" value="0">
+          <!-- 변경: cpiRate -> value, 퍼센트 -> 원 단위 -->
+          <label for="value">CPI (원)</label>
+          <input id="value" type="number" step="1" min="0" value="0" placeholder="예: 2000">
 
           <label for="rsRate">RS %</label>
           <input id="rsRate" type="number" step="0.01" min="0" max="100" value="0">
